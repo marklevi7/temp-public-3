@@ -224,6 +224,9 @@
     right:20px;
     background:var(--accent);
     transition:background .18s ease, transform .18s ease;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
   }
   .fab-mic svg{ stroke:#fff; transition:transform .18s ease; }
   .fab-mic:active{ transform:scale(.94); }
@@ -388,7 +391,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
 
-      <button class="fab fab-mic" id="micBtn" type="button" aria-label="לחץ ודבר" aria-pressed="false" onclick="window.togglePtt()">
+      <button class="fab fab-mic" id="micBtn" type="button" aria-label="החזק כדי לדבר" aria-pressed="false">
         <span class="ring"></span>
         <svg id="micIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="2" width="6" height="12" rx="3"/>
@@ -407,16 +410,41 @@
   </div>
 
 <script>
+  var micBtn = document.getElementById('micBtn');
+  var banner = document.getElementById('banner');
   var ptteLive = false;
-  window.togglePtt = function () {
-    var micBtn = document.getElementById('micBtn');
-    var banner = document.getElementById('banner');
-    ptteLive = !ptteLive;
-    micBtn.classList.toggle('live', ptteLive);
-    micBtn.setAttribute('aria-pressed', String(ptteLive));
-    banner.classList.toggle('show', ptteLive);
-    try { if (navigator.vibrate) navigator.vibrate(ptteLive ? 12 : 6); } catch (e) {}
-  };
+
+  function startTalk(e) {
+    if (e) e.preventDefault();
+    if (ptteLive) return;
+    ptteLive = true;
+    micBtn.classList.add('live');
+    micBtn.setAttribute('aria-pressed', 'true');
+    banner.classList.add('show');
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
+  }
+
+  function stopTalk(e) {
+    if (e) e.preventDefault();
+    if (!ptteLive) return;
+    ptteLive = false;
+    micBtn.classList.remove('live');
+    micBtn.setAttribute('aria-pressed', 'false');
+    banner.classList.remove('show');
+    try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
+  }
+
+  micBtn.addEventListener('pointerdown', startTalk);
+  micBtn.addEventListener('pointerup', stopTalk);
+  micBtn.addEventListener('pointerleave', stopTalk);
+  micBtn.addEventListener('pointercancel', stopTalk);
+  micBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  micBtn.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' || e.code === 'Enter') startTalk(e);
+  });
+  micBtn.addEventListener('keyup', function (e) {
+    if (e.code === 'Space' || e.code === 'Enter') stopTalk(e);
+  });
 </script>
 </body>
 </html>
