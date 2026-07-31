@@ -414,11 +414,11 @@
   var ptteLive = false;
   var audioCtx = null;
 
-  function tone() {
+  function tone(freq) {
     var osc = audioCtx.createOscillator();
     var gain = audioCtx.createGain();
     osc.type = 'sine';
-    osc.frequency.value = 1046.5; // C6 — short, crisp PTT-style chirp
+    osc.frequency.value = freq;
     var t0 = audioCtx.currentTime;
     gain.gain.setValueAtTime(0.0001, t0);
     gain.gain.exponentialRampToValueAtTime(0.5, t0 + 0.008);
@@ -429,16 +429,19 @@
     osc.stop(t0 + 0.15);
   }
 
-  function playBeep() {
+  var TONE_ON = 1046.5;  // C6 — rising key-up chirp when transmission starts
+  var TONE_OFF = 659.25; // E5 — lower key-down chirp when transmission ends
+
+  function playTone(freq) {
     try {
       if (!audioCtx) {
         var Ctx = window.AudioContext || window.webkitAudioContext;
         audioCtx = new Ctx();
       }
       if (audioCtx.state === 'suspended') {
-        audioCtx.resume().then(tone);
+        audioCtx.resume().then(function () { tone(freq); });
       } else {
-        tone();
+        tone(freq);
       }
     } catch (err) {}
   }
@@ -450,7 +453,7 @@
     micBtn.classList.add('live');
     micBtn.setAttribute('aria-pressed', 'true');
     banner.classList.add('show');
-    playBeep();
+    playTone(TONE_ON);
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
   }
 
@@ -461,6 +464,7 @@
     micBtn.classList.remove('live');
     micBtn.setAttribute('aria-pressed', 'false');
     banner.classList.remove('show');
+    playTone(TONE_OFF);
     try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
   }
 
