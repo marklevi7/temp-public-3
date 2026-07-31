@@ -229,15 +229,14 @@
     -webkit-user-select:none;
   }
   .fab-mic svg{ stroke:#fff; transition:transform .18s ease; }
-  .fab-mic:active{ transform:scale(.94); }
   .fab-mic.live{
-    background:var(--danger);
+    transform:scale(.94);
   }
   .fab-mic .ring{
     position:absolute;
     inset:-6px;
     border-radius:50%;
-    border:2px solid var(--danger);
+    border:2px solid var(--accent);
     opacity:0;
   }
   .fab-mic.live .ring{
@@ -264,7 +263,7 @@
     padding:0 14px;
     font-size:12px;
     font-weight:600;
-    color:var(--danger);
+    color:var(--accent);
     display:flex;
     align-items:center;
     gap:7px;
@@ -279,7 +278,7 @@
   }
   .talk-banner .dot{
     width:6px;height:6px;border-radius:50%;
-    background:var(--danger);
+    background:var(--accent);
   }
   .talk-banner.show .dot{
     animation:blink 1s step-start infinite;
@@ -293,7 +292,7 @@
   }
   .bars span{
     width:2px;
-    background:var(--danger);
+    background:var(--accent);
     border-radius:1px;
     animation:bar 0.9s ease-in-out infinite;
   }
@@ -434,10 +433,36 @@
     try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
   }
 
+  function isInsideRect(x, y, rect) {
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }
+
+  // Pointer Events (modern browsers, incl. iOS/Android Safari & Chrome)
   micBtn.addEventListener('pointerdown', startTalk);
   micBtn.addEventListener('pointerup', stopTalk);
   micBtn.addEventListener('pointerleave', stopTalk);
   micBtn.addEventListener('pointercancel', stopTalk);
+
+  // Touch Events fallback (belt-and-suspenders for older/quirky WebViews)
+  micBtn.addEventListener('touchstart', startTalk, { passive: false });
+  micBtn.addEventListener('touchend', stopTalk, { passive: false });
+  micBtn.addEventListener('touchcancel', stopTalk, { passive: false });
+  micBtn.addEventListener('touchmove', function (e) {
+    if (!ptteLive || !e.touches || !e.touches[0]) return;
+    var rect = micBtn.getBoundingClientRect();
+    var t = e.touches[0];
+    if (!isInsideRect(t.clientX, t.clientY, rect)) stopTalk(e);
+  }, { passive: false });
+
+  // Mouse Events fallback (desktop / environments without pointer events)
+  micBtn.addEventListener('mousedown', startTalk);
+  window.addEventListener('mouseup', stopTalk);
+  micBtn.addEventListener('mouseleave', stopTalk);
+
+  // Safety net: if the finger/mouse is released anywhere off-element, don't get stuck "live"
+  window.addEventListener('pointerup', stopTalk);
+  window.addEventListener('touchend', stopTalk, { passive: false });
+
   micBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   micBtn.addEventListener('keydown', function (e) {
     if (e.code === 'Space' || e.code === 'Enter') startTalk(e);
