@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>NETS PTT — Map Wireframe</title>
+<style>
+  html,body{ margin:0; padding:0; }
+  :root{
+    --ink:#26303a;
+    --line:#b8c0c9;
+    --line-soft:#dfe4e9;
+    --paper:#eef1f4;
+    --card:#ffffff;
+    --muted:#6b7684;
+    --accent:#1f6f8b;
+    --accent-soft:#d8ebf1;
+    --danger:#c0453a;
+    --danger-soft:#f6dcd8;
+  }
+  /* Light-only by design, matching the reference app screen. */
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    background:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+  }
+
+  .phone{
+    width:100%;
+    height:100vh;
+    height:100dvh;
+    background:var(--card);
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Top bar */
+  .topbar{
+    display:flex;
+    flex-direction:row-reverse;
+    align-items:center;
+    gap:10px;
+    padding:calc(16px + env(safe-area-inset-top)) 14px 10px;
+    flex-shrink:0;
+  }
+  .avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:var(--line-soft);
+    border:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .search{
+    flex:1;
+    height:36px;
+    border-radius:18px;
+    background:var(--paper);
+    border:1px solid var(--line);
+  }
+  .burger{
+    width:22px;height:16px;
+    flex-shrink:0;
+    display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .burger span{display:block;height:2px;background:var(--muted);border-radius:1px;}
+
+  /* Status card */
+  .status-card{
+    margin:0 14px 10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    flex-shrink:0;
+  }
+  .status-row1{
+    display:flex;
+    flex-direction:row-reverse;
+    align-items:center;
+    gap:8px;
+  }
+  .status-icon-btn{
+    width:26px;height:26px;border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    flex-shrink:0;
+  }
+  .status-title{
+    flex:1;
+    border-radius:6px;
+    margin:0 4px;
+    font-size:14px;
+    font-weight:700;
+    text-align:right;
+  }
+  .status-flag{
+    height:20px;
+    padding:0 8px;
+    border-radius:10px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-size:10px;
+    display:flex;
+    align-items:center;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .status-alert{
+    width:26px;height:26px;border-radius:8px;
+    background:var(--danger);
+    flex-shrink:0;
+  }
+  .status-sub{
+    margin-top:6px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .status-row2{
+    display:flex;
+    flex-direction:row-reverse;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+  }
+  .pill{
+    width:22px;height:22px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;
+    background:var(--line-soft);
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .status-row2 .divider{
+    flex:1;
+  }
+
+  /* Map area */
+  .map{
+    position:relative;
+    flex:1;
+    background:
+      repeating-linear-gradient(0deg, var(--line-soft) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(90deg, var(--line-soft) 0 1px, transparent 1px 34px),
+      var(--paper);
+    overflow:hidden;
+  }
+  .map::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(120deg, transparent 55%, var(--line-soft) 56%, var(--line-soft) 58%, transparent 59%),
+      linear-gradient(35deg, transparent 70%, var(--line-soft) 71%, var(--line-soft) 73%, transparent 74%);
+    opacity:.7;
+  }
+  .zone{
+    position:absolute;
+    top:30%;
+    left:34%;
+    width:32%;
+    height:26%;
+    background:var(--accent-soft);
+    border:1.5px dashed var(--accent);
+    border-radius:4px;
+    opacity:.8;
+  }
+  .pin{
+    position:absolute;
+    width:30px;height:30px;
+    border-radius:8px 8px 8px 2px;
+    background:var(--card);
+    border:1px solid var(--line);
+    transform:rotate(45deg);
+  }
+  .pin.pin-a{ top:24%; left:44%; }
+  .pin.pin-b{ top:38%; left:38%; }
+
+  .map-tools{
+    position:absolute;
+    top:14px;
+    right:14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .map-tools .tool{
+    width:34px;height:34px;
+    border-radius:9px;
+    background:var(--card);
+    border:1px solid var(--line);
+  }
+
+  /* Floating actions */
+  .fab{
+    position:absolute;
+    bottom:22px;
+    width:60px;height:60px;
+    border-radius:50%;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 18px -6px rgba(0,0,0,.4);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .fab-add{
+    left:20px;
+    background:var(--danger);
+  }
+  .fab-add svg{ stroke:#fff; }
+
+  .fab-mic{
+    right:20px;
+    background:var(--accent);
+    transition:background .18s ease, transform .18s ease;
+  }
+  .fab-mic svg{ stroke:#fff; transition:transform .18s ease; }
+  .fab-mic:active{ transform:scale(.94); }
+  .fab-mic.live{
+    background:var(--danger);
+  }
+  .fab-mic .ring{
+    position:absolute;
+    inset:-6px;
+    border-radius:50%;
+    border:2px solid var(--danger);
+    opacity:0;
+  }
+  .fab-mic.live .ring{
+    animation:pulse 1.15s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ opacity:.55; transform:scale(.9); }
+    100%{ opacity:0; transform:scale(1.5); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .fab-mic.live .ring{ animation:none; opacity:.35; }
+  }
+
+  .talk-banner{
+    position:absolute;
+    left:50%;
+    bottom:94px;
+    transform:translate(-50%, 8px);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:7px 14px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--danger);
+    display:flex;
+    align-items:center;
+    gap:7px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    white-space:nowrap;
+  }
+  .talk-banner.show{
+    opacity:1;
+    transform:translate(-50%, 0);
+  }
+  .talk-banner .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--danger);
+  }
+  .talk-banner.show .dot{
+    animation:blink 1s step-start infinite;
+  }
+  @keyframes blink{ 50%{ opacity:.2; } }
+  .bars{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    height:12px;
+  }
+  .bars span{
+    width:2px;
+    background:var(--danger);
+    border-radius:1px;
+    animation:bar 0.9s ease-in-out infinite;
+  }
+  .talk-banner:not(.show) .bars span{ animation-play-state:paused; }
+  .bars span:nth-child(1){ height:40%; animation-delay:0s; }
+  .bars span:nth-child(2){ height:100%; animation-delay:.15s; }
+  .bars span:nth-child(3){ height:65%; animation-delay:.3s; }
+  .bars span:nth-child(4){ height:90%; animation-delay:.45s; }
+  @keyframes bar{
+    0%,100%{ transform:scaleY(.4); }
+    50%{ transform:scaleY(1); }
+  }
+
+  /* Bottom tab bar */
+  .tabbar{
+    display:flex;
+    flex-direction:row-reverse;
+    justify-content:space-around;
+    align-items:center;
+    padding:10px 8px calc(16px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);
+    flex-shrink:0;
+    background:var(--card);
+  }
+  .tab{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+  }
+  .tab svg{ stroke:var(--muted); }
+  .tab.active svg{ stroke:var(--accent); }
+  .tab-label{
+    width:26px;height:6px;
+    border-radius:3px;
+    background:var(--line-soft);
+  }
+  .tab.active .tab-label{ background:var(--accent); opacity:.5; }
+
+  .hint{
+    font-size:11px;
+    color:var(--muted);
+    max-width:300px;
+    text-align:center;
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+    <div class="topbar">
+      <div class="avatar"></div>
+      <div class="search"></div>
+      <div class="burger"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-row1">
+        <div class="status-icon-btn"></div>
+        <div class="status-icon-btn"></div>
+        <div class="status-flag">פעיל</div>
+        <div class="status-title">הקפצה מותאמת</div>
+        <div class="status-alert"></div>
+      </div>
+      <div class="status-sub">13:14 · הדרכות דניאל</div>
+      <div class="status-row2">
+        <span class="pill">2</span>
+        <span class="pill">0</span>
+        <span class="pill">0</span>
+        <span class="pill">0</span>
+        <span class="divider"></span>
+        <span class="pill">1</span>
+        <span class="pill">0</span>
+      </div>
+    </div>
+
+    <div class="map">
+      <div class="zone"></div>
+      <div class="pin pin-a"></div>
+      <div class="pin pin-b"></div>
+
+      <div class="map-tools">
+        <div class="tool"></div>
+        <div class="tool"></div>
+        <div class="tool"></div>
+      </div>
+
+      <div class="talk-banner" id="banner">
+        <span class="dot"></span>
+        <span id="bannerText">משדר…</span>
+        <span class="bars"><span></span><span></span><span></span><span></span></span>
+      </div>
+
+      <button class="fab fab-add" aria-label="הוספה">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+
+      <button class="fab fab-mic" id="micBtn" type="button" aria-label="לחץ ודבר" aria-pressed="false" onclick="window.togglePtt()">
+        <span class="ring"></span>
+        <svg id="micIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3"/>
+          <path d="M5 11a7 7 0 0 0 14 0"/>
+          <path d="M12 18v3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 4h16v12H8l-4 4z"/></svg><span class="tab-label"></span></div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/></svg><span class="tab-label"></span></div>
+      <div class="tab"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/></svg><span class="tab-label"></span></div>
+      <div class="tab active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span class="tab-label"></span></div>
+    </div>
+  </div>
+
+<script>
+  var ptteLive = false;
+  window.togglePtt = function () {
+    var micBtn = document.getElementById('micBtn');
+    var banner = document.getElementById('banner');
+    ptteLive = !ptteLive;
+    micBtn.classList.toggle('live', ptteLive);
+    micBtn.setAttribute('aria-pressed', String(ptteLive));
+    banner.classList.toggle('show', ptteLive);
+    try { if (navigator.vibrate) navigator.vibrate(ptteLive ? 12 : 6); } catch (e) {}
+  };
+</script>
+</body>
+</html>
