@@ -412,6 +412,29 @@
   var micBtn = document.getElementById('micBtn');
   var banner = document.getElementById('banner');
   var ptteLive = false;
+  var audioCtx = null;
+
+  function playBeep() {
+    try {
+      if (!audioCtx) {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new Ctx();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 1046.5; // C6 — short, crisp PTT-style chirp
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.22, audioCtx.currentTime + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.11);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    } catch (err) {}
+  }
 
   function startTalk(e) {
     if (e) e.preventDefault();
@@ -420,6 +443,7 @@
     micBtn.classList.add('live');
     micBtn.setAttribute('aria-pressed', 'true');
     banner.classList.add('show');
+    playBeep();
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
   }
 
