@@ -645,11 +645,9 @@
     osc.stop(t0 + d + 0.01);
   }
 
-  // Start sending: rising D# – G – C', the "you are on air" cue.
+  // Start sending: one beep.
   var TONE_ON = [
-    [622.25,  0,    0.065, 0.40],  // D#5
-    [783.99,  0.07, 0.065, 0.50],  // G5
-    [1046.50, 0.14, 0.11,  0.60]   // C6
+    [261.63, 0, 0.1, 0.5]  // C4
   ];
 
   // Rising do–fa–do', a full octave, played when a transmission ends.
@@ -657,9 +655,9 @@
   var STEP = 0.07;
   var TONE_OFF = [
     // freq, delay, length, peak gain — gain climbs so the rise reads clearly
-    [1046.50, 0,        0.065, 0.55],  // C6
-    [783.99,  STEP,     0.065, 0.50],  // G5
-    [622.25,  STEP * 2, 0.11,  0.46]   // D#5
+    [311.13, 0,        0.065, 0.40],  // D#4
+    [392.00, STEP,     0.065, 0.50],  // G4
+    [523.25, STEP * 2, 0.11,  0.60]   // C5
   ];
 
   // Falling do–fa–do, played when an INCOMING transmission ends.
