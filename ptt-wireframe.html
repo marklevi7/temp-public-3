@@ -288,7 +288,7 @@
     bottom:22px;
     height:60px;
     box-sizing:border-box;
-    min-width:150px;
+    min-width:127px;
     padding:0 74px 0 22px;
     background:var(--card);
     border-radius:30px;
@@ -299,15 +299,20 @@
     z-index:2;
   }
 
-  /* Idle: three quiet dots */
+  /* Three dots at rest; each stretches into a vertical rounded bar
+     while recording, driven by the live mic level. */
   .pill-dots{
     display:flex;
     align-items:center;
     gap:5px;
+    height:34px;
   }
   .pill-dots span{
-    width:7px;height:7px;border-radius:50%;
+    width:7px;
+    height:7px;
+    border-radius:4px;
     background:var(--accent);
+    transition:height .06s linear;
   }
 
   /* Active: waveform */
@@ -365,8 +370,25 @@
     white-space:nowrap;
   }
 
-  .talk-pill.active .pill-dots{ display:none; }
-  .talk-pill.active .bars{ display:flex; }
+  /* Idle heartbeat: a short double-hop every 5s so the channel reads as alive */
+  .talk-pill:not(.active):not(.rx) .pill-dots span{
+    animation:dotHop 6s ease-in-out infinite;
+  }
+  .talk-pill:not(.active):not(.rx) .pill-dots span:nth-child(2){ animation-delay:.09s; }
+  .talk-pill:not(.active):not(.rx) .pill-dots span:nth-child(3){ animation-delay:.18s; }
+  @keyframes dotHop{
+    0%,  100%{ transform:translateY(0); }
+    4%       { transform:translateY(-6px); }
+    8%       { transform:translateY(0); }
+    12%      { transform:translateY(-6px); }
+    16%      { transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .talk-pill .pill-dots span{ animation:none; }
+  }
+
+  /* Transmitting: the same three dots become level meters (JS sets height) */
+  .talk-pill.active .bars{ display:none; }
 
   .talk-pill.rx{ padding-left:16px; }
   .talk-pill.rx .pill-dots{ display:none; }
@@ -661,6 +683,104 @@
     setTimeout(stopReceiving, 3000);
   });
 
+  // ---- B1: real microphone capture + live level on the dots --------------
+  var dotEls = document.querySelectorAll('.pill-dots span');
+  var micStream = null;
+  var recorder = null;
+  var chunks = [];
+  var analyser = null;
+  var rafId = null;
+  var micDenied = false;
+  var playback = new Audio();
+
+  var DOT_MIN = 7;
+  var DOT_MAX = 34;
+
+  function setDot(i, level) {
+    var h = DOT_MIN + Math.max(0, Math.min(1, level)) * (DOT_MAX - DOT_MIN);
+    dotEls[i].style.height = h.toFixed(1) + 'px';
+  }
+
+  function resetDots() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    for (var i = 0; i < dotEls.length; i++) dotEls[i].style.height = '';
+  }
+
+  // Three frequency bands -> three dots, so they move independently.
+  var BANDS = [[2, 9], [9, 26], [26, 64]];
+
+  function driveDots(sourceNode) {
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.55;
+    sourceNode.connect(analyser);
+    var data = new Uint8Array(analyser.frequencyBinCount);
+    (function tick() {
+      analyser.getByteFrequencyData(data);
+      for (var i = 0; i < 3; i++) {
+        var sum = 0, n = 0;
+        for (var j = BANDS[i][0]; j < BANDS[i][1]; j++) { sum += data[j]; n++; }
+        setDot(i, (sum / n / 255) * 2.4);
+      }
+      rafId = requestAnimationFrame(tick);
+    })();
+  }
+
+  // No mic (denied / unsupported): keep the meter alive so the state still reads.
+  function fakeDots() {
+    var t = 0;
+    (function tick() {
+      t += 0.12;
+      setDot(0, 0.35 + 0.3 * Math.sin(t * 1.7));
+      setDot(1, 0.55 + 0.4 * Math.sin(t * 2.3 + 1));
+      setDot(2, 0.4 + 0.35 * Math.sin(t * 1.9 + 2));
+      rafId = requestAnimationFrame(tick);
+    })();
+  }
+
+  function beginCapture() {
+    if (micDenied || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      fakeDots();
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      if (!ptteLive) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+      micStream = stream;
+      if (audioCtx) {
+        driveDots(audioCtx.createMediaStreamSource(stream));
+      } else {
+        fakeDots();
+      }
+      chunks = [];
+      try {
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = function (ev) {
+          if (ev.data && ev.data.size) chunks.push(ev.data);
+        };
+        recorder.onstop = function () {
+          if (!chunks.length) return;
+          playback.src = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type }));
+          // let the release tone finish, then play back what was captured
+          setTimeout(function () { playback.play().catch(function () {}); }, 260);
+        };
+        recorder.start();
+      } catch (err) { recorder = null; }
+    }).catch(function () {
+      micDenied = true;
+      fakeDots();
+    });
+  }
+
+  function endCapture() {
+    resetDots();
+    try { if (recorder && recorder.state === 'recording') recorder.stop(); } catch (err) {}
+    recorder = null;
+    if (micStream) {
+      micStream.getTracks().forEach(function (t) { t.stop(); });
+      micStream = null;
+    }
+  }
+
   function startTalk(e) {
     if (e) e.preventDefault();
     // B2: you cannot transmit over someone who already holds the floor
@@ -671,6 +791,8 @@
     micBtn.setAttribute('aria-pressed', 'true');
     pill.classList.add('active');
     playBlips([[TONE_ON, 0]]);
+    try { playback.pause(); } catch (err) {}
+    beginCapture();
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
   }
 
@@ -681,7 +803,8 @@
     micBtn.classList.remove('live');
     micBtn.setAttribute('aria-pressed', 'false');
     pill.classList.remove('active');
-    playBlips(TONE_OFF); // rising do-re-mi
+    endCapture();
+    playBlips(TONE_OFF); // rising do-fa-do'
     try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
   }
 
