@@ -645,16 +645,21 @@
     osc.stop(t0 + d + 0.01);
   }
 
-  var TONE_ON = 1046.5; // C6 — single chirp when transmission starts
+  // Start sending: rising D# – G – C', the "you are on air" cue.
+  var TONE_ON = [
+    [622.25,  0,    0.065, 0.40],  // D#5
+    [783.99,  0.07, 0.065, 0.50],  // G5
+    [1046.50, 0.14, 0.11,  0.60]   // C6
+  ];
 
   // Rising do–fa–do', a full octave, played when a transmission ends.
   // The octave jump makes the climb unmistakable.
   var STEP = 0.07;
   var TONE_OFF = [
     // freq, delay, length, peak gain — gain climbs so the rise reads clearly
-    [622.25,  0,        0.065, 0.40],  // D#5
+    [1046.50, 0,        0.065, 0.55],  // C6
     [783.99,  STEP,     0.065, 0.50],  // G5
-    [1046.50, STEP * 2, 0.11,  0.60]   // C6
+    [622.25,  STEP * 2, 0.11,  0.46]   // D#5
   ];
 
   // Falling do–fa–do, played when an INCOMING transmission ends.
@@ -831,6 +836,18 @@
     micNoteTimer = setTimeout(function () { el.classList.remove('show'); }, 3500);
   }
 
+  // Acquired once and reused for the whole session.
+  var streamPromise = null;
+  function ensureStream() {
+    if (micStream && micStream.active) return Promise.resolve(micStream);
+    if (!streamPromise) {
+      streamPromise = navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function (s) { micStream = s; return s; })
+        .catch(function (e) { streamPromise = null; throw e; });
+    }
+    return streamPromise;
+  }
+
   function beginCapture() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       micUnavailable('אין תמיכה במיקרופון בדפדפן הזה');
@@ -840,9 +857,11 @@
       micUnavailable('נדרש חיבור מאובטח (HTTPS) לגישה למיקרופון');
       return;
     }
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-      if (!ptteLive) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
-      micStream = stream;
+    ensureStream().then(function (stream) {
+      // The permission prompt blocks the page, so the finger is often already
+      // up by the time this resolves. Keep the stream either way and only skip
+      // the meter — otherwise the very first press can never work.
+      if (!ptteLive) return;
       if (!audioCtx) {
         micUnavailable('אין הקשר אודיו');
         return;
@@ -880,10 +899,8 @@
     resetDots();
     try { if (recorder && recorder.state === 'recording') recorder.stop(); } catch (err) {}
     recorder = null;
-    if (micStream) {
-      micStream.getTracks().forEach(function (t) { t.stop(); });
-      micStream = null;
-    }
+    // Deliberately keep micStream alive: re-acquiring on every release
+    // re-triggers the permission race and kills the next press.
   }
 
   function startTalk(e) {
@@ -895,7 +912,7 @@
     micBtn.classList.add('live');
     micBtn.setAttribute('aria-pressed', 'true');
     pill.classList.add('active');
-    playBlips([[TONE_ON, 0]]);
+    playBlips(TONE_ON);
     try { playback.pause(); } catch (err) {}
     beginCapture();
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
@@ -942,6 +959,15 @@
   // Safety net: if the finger/mouse is released anywhere off-element, don't get stuck "live"
   window.addEventListener('pointerup', stopTalk);
   window.addEventListener('touchend', stopTalk, { passive: false });
+
+  // Ask for the mic on the first touch anywhere, so the permission dialog
+  // isn't racing the first press-and-hold.
+  document.addEventListener('pointerdown', function prime() {
+    document.removeEventListener('pointerdown', prime, true);
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      ensureStream().catch(function () {});
+    }
+  }, true);
 
   micBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   micBtn.addEventListener('keydown', function (e) {
