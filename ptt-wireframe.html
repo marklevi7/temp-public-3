@@ -592,6 +592,14 @@
     [2093.00, STEP * 2, 0.11,  0.55]   // do'' — C7, two octaves above C5
   ];
 
+  // Falling do–fa–do, played when an INCOMING transmission ends.
+  // Mirror image of TONE_OFF: theirs descends, yours climbs.
+  var TONE_RX_END = [
+    [1046.50, 0,        0.065, 0.46],  // do'  — C6
+    [698.46,  STEP,     0.065, 0.48],  // fa   — F5
+    [523.25,  STEP * 2, 0.11,  0.50]   // do   — C5, an octave down
+  ];
+
   // Each entry is [frequency, delay-in-seconds].
   function playBlips(blips) {
     function fire() {
@@ -648,7 +656,7 @@
     micBtn.removeAttribute('aria-disabled');
     simBtn.disabled = false;
     try { incoming.pause(); incoming.currentTime = 0; } catch (err) {}
-    playBlips(TONE_OFF); // rising do-re-mi — the channel is free again
+    playBlips(TONE_RX_END); // falling do-fa-do — they finished talking
   }
 
   simBtn.addEventListener('click', startReceiving);
