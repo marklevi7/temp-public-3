@@ -647,9 +647,9 @@
 
   // Start sending: rising D# – G – C', the "you are on air" cue.
   var TONE_ON = [
-    [622.25,  0,    0.065, 0.40],  // D#5
-    [783.99,  0.07, 0.065, 0.50],  // G5
-    [1046.50, 0.14, 0.11,  0.60]   // C6
+    [1244.51, 0,    0.065, 0.40],  // D#6
+    [1567.98, 0.07, 0.065, 0.50],  // G6
+    [2093.00, 0.14, 0.11,  0.60]   // C7
   ];
 
   // Rising do–fa–do', a full octave, played when a transmission ends.
@@ -657,9 +657,9 @@
   var STEP = 0.07;
   var TONE_OFF = [
     // freq, delay, length, peak gain — gain climbs so the rise reads clearly
-    [1046.50, 0,        0.065, 0.55],  // C6
-    [783.99,  STEP,     0.065, 0.50],  // G5
-    [622.25,  STEP * 2, 0.11,  0.46]   // D#5
+    [2093.00, 0,        0.065, 0.55],  // C7
+    [1567.98, STEP,     0.065, 0.50],  // G6
+    [1244.51, STEP * 2, 0.11,  0.46]   // D#6
   ];
 
   // Falling do–fa–do, played when an INCOMING transmission ends.
@@ -694,6 +694,7 @@
   var simBtn = document.getElementById('simBtn');
   var incoming = document.getElementById('incomingAudio');
   var receiving = false;
+  var rxTimer = null;
 
   var TONE_RX = 880; // A5 — incoming chirp, plays just before their audio
 
@@ -756,13 +757,20 @@
       try {
         incoming.currentTime = 0;
         incoming.playbackRate = 1; // speed is already baked into the clip
-        incoming.play();
+        if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+        var pr = incoming.play();
+        if (pr && pr.catch) pr.catch(function () { stopReceiving(); });
         driveIncoming();
-      } catch (err) {}
+      } catch (err) { stopReceiving(); return; }
+      // Hard stop: if 'ended' never arrives (blocked autoplay, decode failure,
+      // routing quirk) the button must not stay disabled forever.
+      var ms = (isFinite(incoming.duration) && incoming.duration ? incoming.duration : 4) * 1000;
+      rxTimer = setTimeout(stopReceiving, ms + 900);
     }, 260);
   }
 
   function stopReceiving() {
+    clearTimeout(rxTimer);
     if (!receiving) return;
     receiving = false;
     pill.classList.remove('rx');
@@ -777,10 +785,8 @@
 
   simBtn.addEventListener('click', startReceiving);
   incoming.addEventListener('ended', stopReceiving);
-  // safety net if the clip can't load
-  incoming.addEventListener('error', function () {
-    setTimeout(stopReceiving, 3000);
-  });
+  incoming.addEventListener('error', stopReceiving);
+  incoming.addEventListener('stalled', stopReceiving);
 
   // ---- B1: real microphone capture + live level on the dots --------------
   var dotEls = document.querySelectorAll('.pill-dots span');
@@ -848,6 +854,29 @@
     return streamPromise;
   }
 
+  // Buffer-and-send model: audio is captured from the instant of contact and
+  // held locally, so nothing is lost while the floor is being granted.
+  function armCapture(stream) {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+      try { driveDots(audioCtx.createMediaStreamSource(stream)); } catch (err) {}
+    }
+    chunks = [];
+    try {
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = function (ev) {
+        if (ev.data && ev.data.size) chunks.push(ev.data);
+      };
+      recorder.onstop = function () {
+        if (!chunks.length) return;
+        playback.src = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type }));
+        // let the release tone finish, then play back what was captured
+        setTimeout(function () { playback.play().catch(function () {}); }, 300);
+      };
+      recorder.start();
+    } catch (err) { recorder = null; }
+  }
+
   function beginCapture() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       micUnavailable('אין תמיכה במיקרופון בדפדפן הזה');
@@ -857,31 +886,18 @@
       micUnavailable('נדרש חיבור מאובטח (HTTPS) לגישה למיקרופון');
       return;
     }
+    // Fast path: permission already granted, so capture begins on this very
+    // tick — the buffer starts the instant the finger lands, nothing clipped.
+    if (micStream && micStream.active) {
+      armCapture(micStream);
+      return;
+    }
     ensureStream().then(function (stream) {
       // The permission prompt blocks the page, so the finger is often already
       // up by the time this resolves. Keep the stream either way and only skip
       // the meter — otherwise the very first press can never work.
       if (!ptteLive) return;
-      if (!audioCtx) {
-        micUnavailable('אין הקשר אודיו');
-        return;
-      }
-      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-      driveDots(audioCtx.createMediaStreamSource(stream));
-      chunks = [];
-      try {
-        recorder = new MediaRecorder(stream);
-        recorder.ondataavailable = function (ev) {
-          if (ev.data && ev.data.size) chunks.push(ev.data);
-        };
-        recorder.onstop = function () {
-          if (!chunks.length) return;
-          playback.src = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type }));
-          // let the release tone finish, then play back what was captured
-          setTimeout(function () { playback.play().catch(function () {}); }, 260);
-        };
-        recorder.start();
-      } catch (err) { recorder = null; }
+      armCapture(stream);
     }).catch(function (err) {
       micDenied = true;
       var name = (err && err.name) || '';
@@ -959,15 +975,6 @@
   // Safety net: if the finger/mouse is released anywhere off-element, don't get stuck "live"
   window.addEventListener('pointerup', stopTalk);
   window.addEventListener('touchend', stopTalk, { passive: false });
-
-  // Ask for the mic on the first touch anywhere, so the permission dialog
-  // isn't racing the first press-and-hold.
-  document.addEventListener('pointerdown', function prime() {
-    document.removeEventListener('pointerdown', prime, true);
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      ensureStream().catch(function () {});
-    }
-  }, true);
 
   micBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   micBtn.addEventListener('keydown', function (e) {
