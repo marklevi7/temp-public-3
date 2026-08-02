@@ -339,12 +339,24 @@
     gap:8px;
   }
   .spk-avatar{
-    width:26px;height:26px;border-radius:50%;
+    position:relative;
+    width:34px;height:34px;border-radius:50%;
     background:var(--line-soft);
     border:1px solid var(--line);
-    display:flex;align-items:center;justify-content:center;
-    font-size:10px;font-weight:700;color:var(--muted);
+    display:flex;align-items:flex-end;justify-content:center;
+    overflow:hidden;
     flex-shrink:0;
+  }
+  .spk-avatar svg{ fill:var(--muted); opacity:.75; }
+  /* red "on air" badge, same language as the map marker */
+  .spk-avatar::after{
+    content:"";
+    position:absolute;
+    right:0;bottom:0;
+    width:11px;height:11px;
+    border-radius:50%;
+    background:var(--danger);
+    border:2px solid var(--card);
   }
   .spk-name{
     font-size:12px;
@@ -361,6 +373,44 @@
   .talk-pill.rx .pill-speaker{ display:flex; }
   .talk-pill.rx .bars{ display:flex; }
   .talk-pill.rx .bars span{ background:var(--ink); }
+
+  /* Talker's position on the map, with a red "on air" badge (ref m960) */
+  .talker-marker{
+    position:absolute;
+    top:34%;
+    left:46%;
+    display:none;
+    align-items:center;
+    gap:6px;
+    z-index:1;
+  }
+  .map.rx .talker-marker{ display:flex; }
+  .marker-badge{
+    width:30px;height:30px;border-radius:50%;
+    background:var(--danger);
+    display:flex;align-items:center;justify-content:center;
+    gap:2px;
+    box-shadow:0 3px 8px -3px rgba(0,0,0,.5);
+  }
+  .marker-badge i{
+    display:block;
+    width:3px;
+    background:#fff;
+    border-radius:2px;
+    animation:bar .9s ease-in-out infinite;
+  }
+  .marker-badge i:nth-child(1){ height:8px; animation-delay:0s; }
+  .marker-badge i:nth-child(2){ height:14px; animation-delay:.15s; }
+  .marker-badge i:nth-child(3){ height:9px; animation-delay:.3s; }
+  .marker-face{
+    width:38px;height:38px;
+    border-radius:10px;
+    background:var(--card);
+    border:2px solid var(--accent);
+    display:flex;align-items:flex-end;justify-content:center;
+    overflow:hidden;
+  }
+  .marker-face svg{ fill:var(--muted); opacity:.75; }
 
   /* Prototype-only control for demoing the incoming state */
   .sim-btn{
@@ -460,12 +510,21 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.3-.6L3 21l1.8-5A8.3 8.3 0 0 1 4 11.5a8.4 8.4 0 0 1 8.5-8.4h.5a8.4 8.4 0 0 1 8 8.4z"/></svg>
       </button>
 
+      <div class="talker-marker">
+        <span class="marker-badge"><i></i><i></i><i></i></span>
+        <span class="marker-face">
+          <svg width="30" height="30" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4.4 0-8 2.6-8 5.8V22h16v-2.2c0-3.2-3.6-5.8-8-5.8z"/></svg>
+        </span>
+      </div>
+
       <button class="sim-btn" id="simBtn" type="button">▶ הדמיה: שידור נכנס</button>
 
       <div class="talk-pill" id="pill">
         <span class="pill-dots"><span></span><span></span><span></span></span>
         <span class="pill-speaker">
-          <span class="spk-avatar">מל</span>
+          <span class="spk-avatar">
+            <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4.4 0-8 2.6-8 5.8V22h16v-2.2c0-3.2-3.6-5.8-8-5.8z"/></svg>
+          </span>
           <span class="spk-name" id="spkName">מל דוד</span>
         </span>
         <span class="bars"><span></span><span></span><span></span><span></span></span>
@@ -552,6 +611,7 @@
     if (receiving || ptteLive) return;
     receiving = true;
     pill.classList.add('rx');
+    document.querySelector('.map').classList.add('rx');
     micBtn.classList.add('locked');
     micBtn.setAttribute('aria-disabled', 'true');
     simBtn.disabled = true;
@@ -559,7 +619,11 @@
     // let the chirp land before their voice starts
     setTimeout(function () {
       if (!receiving) return;
-      try { incoming.currentTime = 0; incoming.play(); } catch (err) {}
+      try {
+        incoming.currentTime = 0;
+        incoming.playbackRate = 2;
+        incoming.play();
+      } catch (err) {}
     }, 260);
   }
 
@@ -567,6 +631,7 @@
     if (!receiving) return;
     receiving = false;
     pill.classList.remove('rx');
+    document.querySelector('.map').classList.remove('rx');
     micBtn.classList.remove('locked');
     micBtn.removeAttribute('aria-disabled');
     simBtn.disabled = false;
