@@ -395,6 +395,9 @@
   .talk-pill.rx .pill-speaker{ display:flex; }
   .talk-pill.rx .bars{ display:flex; }
   .talk-pill.rx .bars span{ background:var(--ink); }
+  /* while receiving, JS sets these heights from the live audio level */
+  .talk-pill.rx .bars span,
+  .map.rx .marker-badge i{ animation:none; }
 
   /* Talker's position on the map, with a red "on air" badge (ref m960) */
   .talker-marker{
@@ -644,6 +647,50 @@
 
   var TONE_RX = 880; // A5 — incoming chirp, plays just before their audio
 
+  // Incoming audio drives the pill waveform and the map badge, so the bars
+  // track what is actually being said rather than looping on their own.
+  var rxSrc = null, rxAnalyser = null, rxRaf = null;
+  var rxBars = document.querySelectorAll('.talk-pill .bars span');
+  var mkBars = document.querySelectorAll('.marker-badge i');
+  var RX_BANDS4 = [[2, 8], [8, 18], [18, 34], [34, 64]];
+  var RX_BANDS3 = [[2, 10], [10, 28], [28, 64]];
+
+  function driveIncoming() {
+    if (!audioCtx) return;
+    try {
+      if (!rxSrc) {
+        rxSrc = audioCtx.createMediaElementSource(incoming);
+        rxSrc.connect(audioCtx.destination);
+        rxAnalyser = audioCtx.createAnalyser();
+        rxAnalyser.fftSize = 256;
+        rxAnalyser.smoothingTimeConstant = 0.6;
+        rxSrc.connect(rxAnalyser);
+      }
+    } catch (err) { return; }
+    var data = new Uint8Array(rxAnalyser.frequencyBinCount);
+    function level(range) {
+      var s = 0, n = 0;
+      for (var j = range[0]; j < range[1]; j++) { s += data[j]; n++; }
+      return Math.min(1, (s / n / 255) * 2.4);
+    }
+    (function tick() {
+      rxAnalyser.getByteFrequencyData(data);
+      for (var i = 0; i < rxBars.length; i++) {
+        rxBars[i].style.height = (4 + level(RX_BANDS4[i]) * 18).toFixed(1) + 'px';
+      }
+      for (var k = 0; k < mkBars.length; k++) {
+        mkBars[k].style.height = (4 + level(RX_BANDS3[k]) * 14).toFixed(1) + 'px';
+      }
+      rxRaf = requestAnimationFrame(tick);
+    })();
+  }
+
+  function stopIncomingMeter() {
+    if (rxRaf) { cancelAnimationFrame(rxRaf); rxRaf = null; }
+    for (var i = 0; i < rxBars.length; i++) rxBars[i].style.height = '';
+    for (var k = 0; k < mkBars.length; k++) mkBars[k].style.height = '';
+  }
+
   function startReceiving() {
     if (receiving || ptteLive) return;
     receiving = true;
@@ -660,6 +707,7 @@
         incoming.currentTime = 0;
         incoming.playbackRate = 1; // speed is already baked into the clip
         incoming.play();
+        driveIncoming();
       } catch (err) {}
     }, 260);
   }
@@ -672,6 +720,7 @@
     micBtn.classList.remove('locked');
     micBtn.removeAttribute('aria-disabled');
     simBtn.disabled = false;
+    stopIncomingMeter();
     try { incoming.pause(); incoming.currentTime = 0; } catch (err) {}
     playBlips(TONE_RX_END); // falling do-fa-do — they finished talking
   }
