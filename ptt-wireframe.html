@@ -564,7 +564,7 @@
   var audioCtx = null;
 
   // One short blip, scheduled `offset` seconds from now.
-  function tone(freq, offset, len) {
+  function tone(freq, offset, len, peak) {
     var d = len || 0.1;
     var osc = audioCtx.createOscillator();
     var gain = audioCtx.createGain();
@@ -572,7 +572,7 @@
     osc.frequency.value = freq;
     var t0 = audioCtx.currentTime + (offset || 0);
     gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.exponentialRampToValueAtTime(0.5, t0 + 0.006);
+    gain.gain.exponentialRampToValueAtTime(peak || 0.5, t0 + 0.006);
     gain.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
@@ -582,19 +582,22 @@
 
   var TONE_ON = 1046.5; // C6 — single chirp when transmission starts
 
-  // Rising do–re–mi, played when a transmission ends (yours or theirs).
-  // 70ms apart — twice as fast as the old double blip.
+  // Rising do–fa–do', a full octave, played when a transmission ends.
+  // The octave jump makes the climb unmistakable.
   var STEP = 0.07;
   var TONE_OFF = [
-    [523.25, 0,        0.065], // do  — C5
-    [587.33, STEP,     0.065], // re  — D5
-    [659.25, STEP * 2, 0.085]  // mi  — E5
+    // freq, delay, length, peak gain — gain climbs so the rise reads clearly
+    [523.25,  0,        0.065, 0.38],  // do   — C5
+    [698.46,  STEP,     0.065, 0.50],  // fa   — F5
+    [1046.50, STEP * 2, 0.11,  0.62]   // do'  — C6, an octave above the first
   ];
 
   // Each entry is [frequency, delay-in-seconds].
   function playBlips(blips) {
     function fire() {
-      for (var i = 0; i < blips.length; i++) tone(blips[i][0], blips[i][1], blips[i][2]);
+      for (var i = 0; i < blips.length; i++) {
+        tone(blips[i][0], blips[i][1], blips[i][2], blips[i][3]);
+      }
     }
     try {
       if (!audioCtx) {
