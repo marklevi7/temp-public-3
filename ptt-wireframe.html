@@ -454,25 +454,6 @@
     overflow:hidden;
   }
 
-  /* Prototype-only control for demoing the incoming state */
-  .sim-btn{
-    position:absolute;
-    top:14px;
-    left:14px;
-    height:30px;
-    padding:0 12px;
-    border-radius:15px;
-    border:1px dashed var(--line);
-    background:rgba(255,255,255,.9);
-    color:var(--muted);
-    font-size:11px;
-    font-weight:600;
-    font-family:inherit;
-    display:flex;align-items:center;gap:6px;
-    z-index:4;
-    cursor:pointer;
-  }
-  .sim-btn:disabled{ opacity:.45; }
 
   /* Why the mic meter isn't moving, when it isn't */
   .mic-note{
@@ -583,7 +564,6 @@
         <span class="marker-face"><span class="initials alt">ממ</span></span>
       </div>
 
-      <button class="sim-btn" id="simBtn" type="button">▶ הדמיה: שידור נכנס</button>
       <div class="mic-note" id="micNote"></div>
 
       <div class="talk-pill" id="pill">
@@ -689,10 +669,10 @@
   }
 
   // ---- B2: receiving a transmission from someone else -------------------
-  var simBtn = document.getElementById('simBtn');
   var incoming = document.getElementById('incomingAudio');
   var receiving = false;
   var rxTimer = null;
+  var replyTimer = null;
 
   var TONE_RX = 880; // A5 — incoming chirp, plays just before their audio
 
@@ -747,7 +727,6 @@
     document.querySelector('.map').classList.add('rx');
     micBtn.classList.add('locked');
     micBtn.setAttribute('aria-disabled', 'true');
-    simBtn.disabled = true;
     playBlips([[TONE_RX, 0]]);
     // let the chirp land before their voice starts
     setTimeout(function () {
@@ -775,13 +754,11 @@
     document.querySelector('.map').classList.remove('rx');
     micBtn.classList.remove('locked');
     micBtn.removeAttribute('aria-disabled');
-    simBtn.disabled = false;
     stopIncomingMeter();
     try { incoming.pause(); incoming.currentTime = 0; } catch (err) {}
     playBlips(TONE_RX_END); // falling do-fa-do — they finished talking
   }
 
-  simBtn.addEventListener('click', startReceiving);
   incoming.addEventListener('ended', stopReceiving);
   incoming.addEventListener('error', stopReceiving);
   incoming.addEventListener('stalled', stopReceiving);
@@ -794,7 +771,6 @@
   var analyser = null;
   var rafId = null;
   var micDenied = false;
-  var playback = new Audio();
 
   var DOT_MIN = 7;
   var DOT_MAX = 34;
@@ -865,12 +841,8 @@
       recorder.ondataavailable = function (ev) {
         if (ev.data && ev.data.size) chunks.push(ev.data);
       };
-      recorder.onstop = function () {
-        if (!chunks.length) return;
-        playback.src = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type }));
-        // let the release tone finish, then play back what was captured
-        setTimeout(function () { playback.play().catch(function () {}); }, 300);
-      };
+      // The buffer is what would be sent upstream. Never played back —
+      // a PTT user must not hear their own voice.
       recorder.start();
     } catch (err) { recorder = null; }
   }
@@ -922,12 +894,12 @@
     // B2: you cannot transmit over someone who already holds the floor
     if (receiving) return;
     if (ptteLive) return;
+    clearTimeout(replyTimer);
     ptteLive = true;
     micBtn.classList.add('live');
     micBtn.setAttribute('aria-pressed', 'true');
     pill.classList.add('active');
     playBlips(TONE_ON);
-    try { playback.pause(); } catch (err) {}
     beginCapture();
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
   }
@@ -942,6 +914,11 @@
     endCapture();
     playBlips(TONE_OFF); // rising do-fa-do'
     try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
+    // A second later the other side answers — the natural PTT back-and-forth.
+    clearTimeout(replyTimer);
+    replyTimer = setTimeout(function () {
+      if (!ptteLive) startReceiving();
+    }, 1000);
   }
 
   function isInsideRect(x, y, rect) {
