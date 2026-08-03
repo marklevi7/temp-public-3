@@ -595,18 +595,57 @@
   .set-row.on .switch{ background:var(--ok); }
   .set-row.on .switch::after{ transform:translateX(-20px); }
 
+
+  /* chat rows: icon + name + preview + time (+ unread) */
+  .set-row.chat{ align-items:flex-start; gap:10px; padding:11px 14px; }
+  .set-row.chat.sel{ background:#dbe9f8; }
+  .chat-av{
+    width:42px;height:42px;
+    border-radius:11px;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .chat-av.round{ border-radius:50%; }
+  .chat-av svg{ stroke:#fff; }
+  .chat-av.warn svg{ stroke:#333d47; }
+  .av-mauve{ background:#b4737f; }
+  .av-pink{  background:#efa3e3; }
+  .av-blue{  background:#5c9bf0; }
+  .av-grey{  background:#9aa4ae; }
+  .av-pale{  background:#c9ced4; }
+  .chat-main{ flex:1; min-width:0; }
+  .chat-title{
+    font-size:13.5px;font-weight:700;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .chat-sub, .chat-prev{
+    font-size:12px;color:var(--muted);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .chat-meta{
+    display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+    flex-shrink:0;padding-top:2px;
+  }
+  .chat-time{ font-size:11px;color:var(--muted);white-space:nowrap; }
+  .chat-time.live{ color:var(--ok); font-weight:700; }
+  .chat-badge{
+    min-width:19px;height:19px;border-radius:10px;padding:0 5px;
+    background:var(--accent);color:#fff;
+    font-size:11px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .set-row .radio{ margin-top:11px; }
+  .set-row.sel .radio{
+    border-color:var(--accent);
+    background:var(--accent) url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17.5 19 7'/%3E%3C/svg%3E") center / 14px 14px no-repeat;
+  }
+
   /* single-select chat list */
   .radio{
     width:22px;height:22px;border-radius:50%;
     border:2px solid var(--line);
     flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
-  }
-  .set-row.sel .radio{ border-color:var(--accent); }
-  .set-row.sel .radio::after{
-    content:"";
-    width:11px;height:11px;border-radius:50%;
-    background:var(--accent);
   }
   .set-row.sel .name{ color:var(--accent); }
   .settings.off .set-group.chats{ opacity:.4; pointer-events:none; }
@@ -757,53 +796,85 @@
 
       <p class="set-label">שידור אל</p>
       <div class="set-group chats" id="chatList">
-        <button class="set-row chat" type="button" data-chat="כיתת כוננות רמת גן">
+        <button class="set-row chat sel" type="button" data-chat="אביר לילה ג׳ (תרגול) - 29/7 17:05">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">כיתת כוננות רמת גן</span>
-            <span class="meta">42 משתתפים</span>
+          <span class="chat-av av-mauve"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V4h9l-2.2 3.6L16 11H7"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">אביר לילה ג׳ (תרגול) - 29/7 17:05</div>
+            <div class="chat-sub">אני: אביר לילה ג׳</div>
+            <div class="chat-prev">---- הקפצת אביר לילה ג׳ הוכרזה ביישוב הדר…</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time live">עכשיו</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="מוקד ביטחון">
+        <button class="set-row chat" type="button" data-chat="קבוצה גדולה">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">מוקד ביטחון</span>
-            <span class="meta">6 משתתפים</span>
+          <span class="chat-av av-grey round"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 18c0-2.5 2.5-4 5.5-4s5.5 1.5 5.5 4M16 14.2c2.4.2 4.5 1.5 4.5 3.8"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">קבוצה גדולה</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time">21/7/26</span>
           </span>
         </button>
-        <button class="set-row chat sel" type="button" data-chat="סיור לילה ב׳">
+        <button class="set-row chat" type="button" data-chat="הקפצה מותאמת (תרגול) - 17/7 16:22">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">סיור לילה ב׳</span>
-            <span class="meta">4 משתתפים</span>
+          <span class="chat-av av-pink"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a13 13 0 0 1 0 16 13 13 0 0 1 0-16z"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">הקפצה מותאמת (תרגול) - 17/7 16:22</div>
+            <div class="chat-sub">חמל כיתת כוננות: הקפצה מותאמת</div>
+            <div class="chat-prev">---- אירוע ביטחוני ביישוב הדרכות דניאל</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time">17/7/26</span>
+            <span class="chat-badge">1</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="צוות רפואה">
+        <button class="set-row chat" type="button" data-chat="אביר לילה ב׳ (תרגול) - 13/7 13:19">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">צוות רפואה</span>
-            <span class="meta">11 משתתפים</span>
+          <span class="chat-av av-blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V4h9l-2.2 3.6L16 11H7"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">אביר לילה ב׳ (תרגול) - 13/7 13:19</div>
+            <div class="chat-sub">דור מנהל: אביר לילה ב׳</div>
+            <div class="chat-prev">---- הקפצת אביר לילה ב׳ הוכרזה ביישוב הדר…</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time">13/7/26</span>
+            <span class="chat-badge">1</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="מפקדי מרחב">
+        <button class="set-row chat" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">מפקדי מרחב</span>
-            <span class="meta">9 משתתפים</span>
+          <span class="chat-av av-pale round warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4M12 16.6v.1"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">זיהוי רחפן - חיישן קולי - הדרכות דניאל</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time">7/7/26</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="כיתת כוננות גבעתיים">
+        <button class="set-row chat" type="button" data-chat="אביר לילה ב׳ (תרגול) - 5/7 20:52">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">כיתת כוננות גבעתיים</span>
-            <span class="meta">38 משתתפים</span>
+          <span class="chat-av av-blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V4h9l-2.2 3.6L16 11H7"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">אביר לילה ב׳ (תרגול) - 5/7 20:52</div>
+            <div class="chat-sub">דור מנהל: אביר לילה ב׳</div>
+            <div class="chat-prev">---- הקפצת אביר לילה ב׳ הוכרזה ביישוב הדרכ…</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time">5/7/26</span>
+            <span class="chat-badge">1</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="חמ״ל אירוע 4311">
+        <button class="set-row chat" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
           <span class="radio"></span>
-          <span class="grow">
-            <span class="name">חמ״ל אירוע 4311</span>
-            <span class="meta">17 משתתפים</span>
+          <span class="chat-av av-pale round warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4M12 16.6v.1"/></svg></span>
+          <span class="chat-main">
+            <div class="chat-title">זיהוי רחפן - חיישן קולי - הדרכות דניאל</div>
+          </span>
+          <span class="chat-meta">
+            <span class="chat-time">5/7/26</span>
           </span>
         </button>
       </div>
@@ -1178,7 +1249,7 @@
   var chatList = document.getElementById('chatList');
   var settingsFab = document.querySelector('.settings-fab');
   var pttEnabled = true;
-  var activeChat = 'סיור לילה ב׳';
+  var activeChat = 'אביר לילה ג׳ (תרגול) - 29/7 17:05';
 
   settingsFab.addEventListener('click', function () {
     settingsEl.classList.add('open');
