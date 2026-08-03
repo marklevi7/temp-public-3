@@ -1238,8 +1238,11 @@
   }
 
   function stopTalk(e) {
-    if (e) e.preventDefault();
+    // Only swallow the event when we are actually transmitting. These handlers
+    // are bound to window, and preventDefault() on any stray touchend cancels
+    // the synthesized click — which silently breaks every other button.
     if (!ptteLive) return;
+    if (e && e.cancelable) e.preventDefault();
     ptteLive = false;
     micBtn.classList.remove('live');
     micBtn.setAttribute('aria-pressed', 'false');
