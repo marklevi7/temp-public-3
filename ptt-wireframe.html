@@ -399,12 +399,11 @@
   .talk-pill.active .bars{ display:none; }
 
   .talk-pill.rx{ padding-left:16px; }
-  .talk-pill.rx .pill-dots{ display:none; }
   .talk-pill.rx .pill-speaker{ display:flex; }
-  .talk-pill.rx .bars{ display:flex; }
-  .talk-pill.rx .bars span{ background:var(--ink); }
+  .talk-pill.rx .pill-dots{ display:flex; }
+  .talk-pill.rx .pill-dots span{ background:var(--ink); }
+  .talk-pill.rx .bars{ display:none; }
   /* while receiving, JS sets these heights from the live audio level */
-  .talk-pill.rx .bars span,
   .map.rx .marker-badge i{ animation:none; }
 
   /* Team members on the map. Always visible; the one who is talking
@@ -424,7 +423,7 @@
     background:var(--accent);
     display:none;
     align-items:center;justify-content:center;
-    gap:2px;
+    gap:3px;
     box-shadow:0 3px 8px -3px rgba(0,0,0,.5);
   }
   .map.rx .talker-marker.m1 .marker-badge{ display:flex; }
@@ -434,14 +433,11 @@
   .map.rx .talker-marker.m1 .marker-face{ border-color:var(--danger); }
   .marker-badge i{
     display:block;
-    width:3px;
+    width:4px;
+    height:4px;
     background:#fff;
     border-radius:2px;
-    animation:bar .9s ease-in-out infinite;
   }
-  .marker-badge i:nth-child(1){ height:8px; animation-delay:0s; }
-  .marker-badge i:nth-child(2){ height:14px; animation-delay:.15s; }
-  .marker-badge i:nth-child(3){ height:9px; animation-delay:.3s; }
   .initials{
     width:100%;height:100%;
     display:flex;align-items:center;justify-content:center;
@@ -893,9 +889,7 @@
   // Incoming audio drives the pill waveform and the map badge, so the bars
   // track what is actually being said rather than looping on their own.
   var rxSrc = null, rxAnalyser = null, rxRaf = null;
-  var rxBars = document.querySelectorAll('.talk-pill .bars span');
   var mkBars = document.querySelectorAll('.marker-badge i');
-  var RX_BANDS4 = [[2, 8], [8, 18], [18, 34], [34, 64]];
   var RX_BANDS3 = [[2, 10], [10, 28], [28, 64]];
 
   function driveIncoming() {
@@ -918,11 +912,11 @@
     }
     (function tick() {
       rxAnalyser.getByteFrequencyData(data);
-      for (var i = 0; i < rxBars.length; i++) {
-        rxBars[i].style.height = (4 + level(RX_BANDS4[i]) * 18).toFixed(1) + 'px';
-      }
-      for (var k = 0; k < mkBars.length; k++) {
-        mkBars[k].style.height = (4 + level(RX_BANDS3[k]) * 14).toFixed(1) + 'px';
+      for (var i = 0; i < 3; i++) {
+        var v = level(RX_BANDS3[i]);
+        // identical pattern in both places, only the scale differs
+        dotEls[i].style.height = (DOT_MIN + v * (DOT_MAX - DOT_MIN)).toFixed(1) + 'px';
+        mkBars[i].style.height = (4 + v * 14).toFixed(1) + 'px';
       }
       rxRaf = requestAnimationFrame(tick);
     })();
@@ -930,8 +924,10 @@
 
   function stopIncomingMeter() {
     if (rxRaf) { cancelAnimationFrame(rxRaf); rxRaf = null; }
-    for (var i = 0; i < rxBars.length; i++) rxBars[i].style.height = '';
-    for (var k = 0; k < mkBars.length; k++) mkBars[k].style.height = '';
+    for (var i = 0; i < 3; i++) {
+      dotEls[i].style.height = '';
+      mkBars[i].style.height = '';
+    }
   }
 
   function startReceiving() {
