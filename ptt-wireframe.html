@@ -770,6 +770,120 @@
   #markup.on{ pointer-events:auto; cursor:crosshair; }
   .devbar .tool.on{ background:#c0453a; border-color:#d4665c; color:#fff; }
 
+
+  /* ---- Chats screen — Figma 1520:44709 --------------------------------- */
+  .chats{
+    position:absolute;
+    inset:0;
+    background:#fff;
+    z-index:15;
+    display:none;
+    flex-direction:column;
+  }
+  .chats.open{ display:flex; }
+  .chats-scroll{ flex:1; overflow-y:auto; position:relative; }
+
+  .chat-card{
+    height:88px;
+    box-sizing:border-box;
+    background:#fff;
+    border-top:1px solid #d1d4d8;
+    padding:16px 24px;
+    display:flex;
+    align-items:center;
+  }
+  .cc-wrap{ display:flex; align-items:center; gap:8px; width:100%; }
+
+  .cc-avatar{ position:relative; width:44px; height:40px; flex-shrink:0; }
+  .cc-avatar .ph{
+    position:absolute; left:2px; top:0;
+    width:40px; height:40px; border-radius:50%;
+    object-fit:cover; display:block;
+  }
+  .cc-avatar .ev{
+    position:absolute; left:2px; top:0;
+    width:40px; height:40px; border-radius:38px;
+    background:#bbbfc4;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cc-avatar .st{ position:absolute; left:0; top:24px; width:16px; height:16px; }
+  .cc-avatar .st svg{ display:block; overflow:visible; }
+  .cc-avatar .st .ck{ position:absolute; left:4.5px; top:5.5px; }
+
+  .cc-text{
+    flex:1; min-width:0;
+    display:flex; flex-direction:column;
+    align-items:flex-end;
+    text-align:right;
+    color:#1b293b;
+    line-height:20px;
+  }
+  .cc-name{ font-size:16px; font-weight:600; white-space:nowrap; }
+  .cc-prev{
+    font-size:14px; font-weight:400;
+    width:205px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .cc-prev .ic{ vertical-align:-3px; margin-inline-start:4px; }
+  .cc-voice{ display:flex; align-items:center; gap:4px; justify-content:flex-end; width:100%; font-size:14px; }
+
+  .cc-time{
+    direction:ltr;
+    width:55px; flex-shrink:0;
+    display:flex; flex-direction:column; gap:8px; align-items:flex-start;
+  }
+  .cc-time .t{ font-size:16px; line-height:20px; color:#1b293b; white-space:nowrap; }
+  .cc-badge{
+    width:20px; height:20px; border-radius:30px;
+    background:#2c86f1;
+    color:#fff; font-size:14px; font-weight:700; line-height:20px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .chats-fade{
+    position:absolute; left:0; right:0; bottom:64px; height:118px;
+    background:linear-gradient(to bottom, rgba(255,255,255,0), #fff 78%);
+    pointer-events:none;
+    z-index:2;
+  }
+  .chats-fab{
+    position:absolute;
+    left:24px; bottom:88px;
+    width:56px; height:56px;
+    border:none;
+    border-radius:75px;
+    background:#2c86f1;
+    filter:drop-shadow(0 4px 3.5px rgba(0,0,0,.38));
+    display:flex; align-items:center; justify-content:center;
+    z-index:3;
+    cursor:pointer;
+  }
+
+  /* chats screen has its own nav (Figma 1520:44736) */
+  .navmenu{ direction:ltr; background:#fff; display:flex; align-items:stretch; flex-shrink:0; }
+  .nav-item{
+    flex:1 0 0; min-width:0;
+    background:#fff;
+    border-top:1px solid var(--gray5);
+    padding:8px 0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .nav-ico{
+    position:relative;
+    width:64px; height:32px;
+    border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nav-ico svg{ display:block; overflow:visible; }
+  .nav-item span{
+    font-size:12px; line-height:normal;
+    color:#767f89;
+    text-align:center;
+    width:64px;
+  }
+  .nav-item.on span{ color:#2c86f1; font-weight:700; }
+
   .hint{
     font-size:11px;
     color:var(--muted);
@@ -789,6 +903,7 @@
   <span class="lbl">מסכים</span>
   <button type="button" data-state="settings">הגדרות</button>
   <button type="button" data-state="chats">בחירת צ׳אט</button>
+  <button type="button" data-state="chatlist">מסך צ׳אטים</button>
   <span class="lbl">סימון</span>
   <button type="button" class="tool" id="tPen">✏️ עיפרון</button>
   <button type="button" class="tool" id="tArrow">➜ חץ</button>
@@ -1023,6 +1138,154 @@
       <p class="set-label" style="margin-top:-14px">ניתן לבחור צ׳אט אחד בלבד. כל שידור נשלח אליו.</p>
     </div>
   </div>
+
+    <div class="chats" id="chatsScreen">
+      <div class="header">
+        <div class="statusbar">
+          <span class="sb-icons">
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="#000"><path d="M8 11.5 0.6 3.4A11 11 0 0 1 15.4 3.4z"/></svg>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="#000"><path d="M11 1v10H8.6V1zM7 3.6V11H4.6V3.6zM3 6.2V11H0.6V6.2z"/></svg>
+            <svg width="8" height="13" viewBox="0 0 8 13" fill="#000"><path d="M2.6 0h2.8v1H7v12H1V1h1.6z"/></svg>
+          </span>
+          <span class="sb-time">12:30</span>
+        </div>
+        <div class="appbar">
+          <span class="ab-avatar"><span>מל</span></span>
+          <span class="ab-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+            <span>Search…</span>
+          </span>
+          <span class="ab-menu">
+            <svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke-width="2" stroke-linecap="round"><path d="M1 1h16M1 9h16"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="chats-scroll">
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">יוסי ישראלי</div>
+              <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
+            </div>
+            <div class="cc-time">
+              <span class="t">21:45</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">ראובן עוז</div>
+              <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
+            </div>
+            <div class="cc-time">
+              <span class="t">16:14</span>
+            <span class="cc-badge">5</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><span class="ev"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 1V3H2C0.895431 3 0 3.89543 0 5V19C0 20.1046 0.895431 21 2 21H18C19.1046 21 20 20.1046 20 19V9V7V5C20 3.89543 19.1046 3 18 3H17V1C17 0.447715 16.5523 0 16 0C15.4477 0 15 0.447715 15 1V3H5V1C5 0.447715 4.55228 0 4 0C3.44772 0 3 0.447715 3 1ZM16 5H4H2V7H18V5H16ZM2 9V19H18V9H2ZM4 12C4 11.4477 4.44772 11 5 11H15C15.5523 11 16 11.4477 16 12C16 12.5523 15.5523 13 15 13H5C4.44772 13 4 12.5523 4 12ZM5 15C4.44772 15 4 15.4477 4 16C4 16.5523 4.44772 17 5 17H8C8.55229 17 9 16.5523 9 16C9 15.4477 8.55229 15 8 15H5Z" fill="#1B293B"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">הרצל 60, נתניה</div>
+              <div class="cc-prev">דניאל תורג׳מן: הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק...</div>
+            </div>
+            <div class="cc-time">
+              <span class="t">12:06</span>
+            <span class="cc-badge">5</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">אילן מעוז</div>
+              <div class="cc-voice"><span>0:45</span><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></div>
+            </div>
+            <div class="cc-time">
+              <span class="t">11:35</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><span class="ev"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 1V3H2C0.895431 3 0 3.89543 0 5V19C0 20.1046 0.895431 21 2 21H18C19.1046 21 20 20.1046 20 19V9V7V5C20 3.89543 19.1046 3 18 3H17V1C17 0.447715 16.5523 0 16 0C15.4477 0 15 0.447715 15 1V3H5V1C5 0.447715 4.55228 0 4 0C3.44772 0 3 0.447715 3 1ZM16 5H4H2V7H18V5H16ZM2 9V19H18V9H2ZM4 12C4 11.4477 4.44772 11 5 11H15C15.5523 11 16 11.4477 16 12C16 12.5523 15.5523 13 15 13H5C4.44772 13 4 12.5523 4 12ZM5 15C4.44772 15 4 15.4477 4 16C4 16.5523 4.44772 17 5 17H8C8.55229 17 9 16.5523 9 16C9 15.4477 8.55229 15 8 15H5Z" fill="#1B293B"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">השקמה 2, נתניה</div>
+              <div class="cc-voice"><span>0:45</span><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg><span>דניאל תורג׳מן:</span></div>
+            </div>
+            <div class="cc-time">
+              <span class="t">09:14</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">גיל בן פורת</div>
+              <div class="cc-prev">דמויות חשודות מתחבאות ב...<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linejoin="round"><path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v11H3z"/><circle cx="12" cy="13.5" r="3.2"/></svg></div>
+            </div>
+            <div class="cc-time">
+              <span class="t">Yesterday</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">נדב אבידן</div>
+              <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
+            </div>
+            <div class="cc-time">
+              <span class="t">Sunday</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name">אביגדור נאמן</div>
+              <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
+            </div>
+            <div class="cc-time">
+              <span class="t">09/01/24</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chats-fade"></div>
+      <button class="chats-fab" type="button" aria-label="חדש">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 6H12M6 0V12V0Z" stroke="white" stroke-width="2" stroke-miterlimit="10"/></svg>
+      </button>
+
+      <div class="navmenu">
+        <div class="nav-item">
+          <span class="nav-ico"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 17H0" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/><path d="M1.00012 17C1.79577 17 2.55861 16.6839 3.12122 16.1213C3.68382 15.5587 4.00012 14.7956 4.00012 14V8C4.00012 6.14348 4.73742 4.36305 6.05017 3.05029C7.36293 1.73754 9.14361 1 11.0001 1C12.8566 1 14.6371 1.73754 15.9498 3.05029C17.2626 4.36305 18.0001 6.14348 18.0001 8V14C18.0001 14.7956 18.3162 15.5587 18.8788 16.1213C19.4414 16.6839 20.2045 17 21.0001 17" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/><path d="M14.0001 18C14.0001 18.7956 13.6838 19.5587 13.1212 20.1213C12.5586 20.6839 11.7958 21 11.0001 21C10.2045 21 9.44139 20.6839 8.87878 20.1213C8.31618 19.5587 8.00012 18.7956 8.00012 18" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/></svg></span>
+          <span>עידכונים</span>
+        </div>
+        <div class="nav-item on">
+          <span class="nav-ico"><svg width="22" height="21.0046" viewBox="0 0 22 21.0046" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.41995 18.7443C5.80081 19.5796 7.38625 20.0157 9.00003 20.0043C13.42 20.0043 17 16.8743 17 13.0043C17 9.13433 13.42 6.00433 9.00003 6.00433C4.58003 6.00433 1.00003 9.14433 1.00003 13.0043C1.00024 14.155 1.39852 15.0233 1.99991 16.0043L1.00003 20.0043L4.41995 18.7443Z" fill="#2C86F1" fill-opacity="0.2" stroke="#2C86F1" stroke-width="2" stroke-linejoin="round"/><path d="M16.5699 15.2743C17.8388 14.7744 18.9342 13.9146 19.7212 12.8008C20.5082 11.6869 20.9527 10.3674 21 9.00431C21 5.14431 17.42 2.00431 13 2.00431C11.4099 1.95212 9.84015 2.37519 8.49173 3.21952C7.14331 4.06384 6.07742 5.29105 5.42996 6.7443" fill="#2C86F1" fill-opacity="0.2"/><path d="M16.5699 15.2743C17.8388 14.7744 18.9342 13.9146 19.7212 12.8008C20.5082 11.6869 20.9527 10.3674 21 9.00431C21 5.14431 17.42 2.00431 13 2.00431C11.4099 1.95212 9.84015 2.37519 8.49173 3.21952C7.14331 4.06384 6.07742 5.29105 5.42996 6.7443" stroke="#2C86F1" stroke-width="2" stroke-linejoin="round"/><path d="M5 0.5C7.48528 0.5 9.5 2.51472 9.5 5C9.5 7.48528 7.48528 9.5 5 9.5C2.51472 9.5 0.5 7.48528 0.5 5C0.5 2.51472 2.51472 0.5 5 0.5Z" transform="translate(12.5 -0.5)" fill="#F34545" stroke="white" stroke-miterlimit="10"/></svg></span>
+          <span>צאטים</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-ico"><svg width="18" height="22" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 3H15C15.5304 3 16.039 3.21071 16.4141 3.58578C16.7891 3.96086 17 4.46957 17 5V19C17 19.5304 16.7891 20.0391 16.4141 20.4142C16.039 20.7893 15.5304 21 15 21H3C2.46957 21 1.96077 20.7893 1.58569 20.4142C1.21062 20.0391 1 19.5304 1 19V5C1 4.46957 1.21062 3.96086 1.58569 3.58578C1.96077 3.21071 2.46957 3 3 3H5" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/><path d="M7 5C6.46957 5 5.96077 4.78929 5.58569 4.41422C5.21062 4.03914 5 3.53043 5 3C5 2.46957 5.21062 1.96086 5.58569 1.58578C5.96077 1.21071 6.46957 1 7 1H11C11.5304 1 12.039 1.21071 12.4141 1.58578C12.7891 1.96086 13 2.46957 13 3C13 3.53043 12.7891 4.03914 12.4141 4.41422C12.039 4.78929 11.5304 5 11 5H7Z" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/><path d="M4 9H14" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/><path d="M4 13H11" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/></svg></span>
+          <span>אירועים</span>
+        </div>
+        <div class="nav-item" id="navHome">
+          <span class="nav-ico"><svg width="18" height="22" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.99988 12V18" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/><path d="M15.7998 5.59998L10.2 1.40002C9.85376 1.14038 9.43274 1 9 1C8.56726 1 8.146 1.14038 7.7998 1.40002L2.19995 5.59998C1.82736 5.87942 1.52493 6.24176 1.31665 6.65833C1.10837 7.07489 1 7.53426 1 8V19C1 19.5304 1.21062 20.0391 1.58569 20.4142C1.96077 20.7893 2.46957 21 3 21H15C15.5304 21 16.039 20.7893 16.4141 20.4142C16.7891 20.0391 17 19.5304 17 19V8C17 7.53426 16.8914 7.07489 16.6831 6.65833C16.4748 6.24176 16.1724 5.87942 15.7998 5.59998V5.59998Z" stroke="#A4A9B1" stroke-width="2" stroke-miterlimit="10"/></svg></span>
+          <span>בית</span>
+        </div>
+      </div>
+    </div>
 
     <div class="tabbar">
       <div class="tab">
@@ -1532,6 +1795,7 @@
     if (ptteLive) stopTalk();
     stopReceiving();
     settingsEl.classList.remove('open');
+    closeChats();
     document.getElementById('micNote').classList.remove('show');
     if (!pttEnabled) { pttEnabled = true; applyPtt(); }
   }
@@ -1550,6 +1814,7 @@
       var list = document.getElementById('chatList');
       if (list && list.scrollIntoView) list.scrollIntoView({ block: 'start' });
     },
+    chatlist: function () { openChats(); },
     pttoff: function () { pttEnabled = false; applyPtt(); },
     micerr: function () {
       micUnavailable('הגישה למיקרופון נחסמה — פתחו בדפדפן');
@@ -1633,6 +1898,13 @@
   }
   mk.addEventListener('pointerup', endDraw);
   mk.addEventListener('pointerleave', endDraw);
+
+  // ---- Chats screen ------------------------------------------------------
+  var chatsScreen = document.getElementById('chatsScreen');
+  function openChats() { chatsScreen.classList.add('open'); }
+  function closeChats() { chatsScreen.classList.remove('open'); }
+  document.querySelectorAll('.tabbar .tab')[0].addEventListener('click', openChats);
+  document.getElementById('navHome').addEventListener('click', closeChats);
 </script>
 </body>
 </html>
