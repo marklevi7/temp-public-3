@@ -690,6 +690,17 @@
     color:#fff;
   }
 
+
+  /* markup layer */
+  #markup{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    pointer-events:none;
+  }
+  #markup.on{ pointer-events:auto; cursor:crosshair; }
+  .devbar .tool.on{ background:#c0453a; border-color:#d4665c; color:#fff; }
+
   .hint{
     font-size:11px;
     color:var(--muted);
@@ -709,10 +720,15 @@
   <span class="lbl">מסכים</span>
   <button type="button" data-state="settings">הגדרות</button>
   <button type="button" data-state="chats">בחירת צ׳אט</button>
+  <span class="lbl">סימון</span>
+  <button type="button" class="tool" id="tPen">✏️ עיפרון</button>
+  <button type="button" class="tool" id="tArrow">➜ חץ</button>
+  <button type="button" id="tClear">🗑 נקה</button>
   <span class="lbl">קצה</span>
   <button type="button" data-state="pttoff">PTT כבוי</button>
   <button type="button" data-state="micerr">מיקרופון חסום</button>
 </div>
+<canvas id="markup"></canvas>
 <div class="phone">
     <div class="topbar">
       <div class="avatar"></div>
@@ -1399,6 +1415,72 @@
   });
 
   devMark('idle');
+
+  // ---- Markup layer (pencil / arrow) -------------------------------------
+  var mk = document.getElementById('markup');
+  var mctx = mk.getContext('2d');
+  var mkTool = null, drawing = false, sx = 0, sy = 0, snapshot = null;
+
+  function mkSize() {
+    var d = window.devicePixelRatio || 1;
+    var img = mk.width ? mctx.getImageData(0, 0, mk.width, mk.height) : null;
+    mk.width = innerWidth * d; mk.height = innerHeight * d;
+    mk.style.width = innerWidth + 'px'; mk.style.height = innerHeight + 'px';
+    mctx.setTransform(d, 0, 0, d, 0, 0);
+    mctx.lineCap = 'round'; mctx.lineJoin = 'round';
+    mctx.strokeStyle = '#e5352b'; mctx.fillStyle = '#e5352b'; mctx.lineWidth = 3;
+    if (img) mctx.putImageData(img, 0, 0);
+  }
+  mkSize();
+  window.addEventListener('resize', mkSize);
+
+  function pt(e) {
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function setTool(t) {
+    mkTool = (mkTool === t) ? null : t;
+    mk.classList.toggle('on', !!mkTool);
+    document.getElementById('tPen').classList.toggle('on', mkTool === 'pen');
+    document.getElementById('tArrow').classList.toggle('on', mkTool === 'arrow');
+  }
+  document.getElementById('tPen').addEventListener('click', function () { setTool('pen'); });
+  document.getElementById('tArrow').addEventListener('click', function () { setTool('arrow'); });
+  document.getElementById('tClear').addEventListener('click', function () {
+    mctx.clearRect(0, 0, mk.width, mk.height);
+  });
+
+  function arrow(x1, y1, x2, y2) {
+    var a = Math.atan2(y2 - y1, x2 - x1), head = 14;
+    mctx.beginPath(); mctx.moveTo(x1, y1); mctx.lineTo(x2, y2); mctx.stroke();
+    mctx.beginPath();
+    mctx.moveTo(x2, y2);
+    mctx.lineTo(x2 - head * Math.cos(a - 0.4), y2 - head * Math.sin(a - 0.4));
+    mctx.lineTo(x2 - head * Math.cos(a + 0.4), y2 - head * Math.sin(a + 0.4));
+    mctx.closePath(); mctx.fill();
+  }
+
+  mk.addEventListener('pointerdown', function (e) {
+    if (!mkTool) return;
+    e.preventDefault();
+    drawing = true;
+    var p = pt(e); sx = p.x; sy = p.y;
+    if (mkTool === 'pen') { mctx.beginPath(); mctx.moveTo(sx, sy); }
+    else { snapshot = mctx.getImageData(0, 0, mk.width, mk.height); }
+  });
+  mk.addEventListener('pointermove', function (e) {
+    if (!drawing) return;
+    var p = pt(e);
+    if (mkTool === 'pen') { mctx.lineTo(p.x, p.y); mctx.stroke(); }
+    else { mctx.putImageData(snapshot, 0, 0); arrow(sx, sy, p.x, p.y); }
+  });
+  function endDraw(e) {
+    if (!drawing) return;
+    drawing = false;
+    if (mkTool === 'arrow') { var p = pt(e); mctx.putImageData(snapshot, 0, 0); arrow(sx, sy, p.x, p.y); }
+  }
+  mk.addEventListener('pointerup', endDraw);
+  mk.addEventListener('pointerleave', endDraw);
 </script>
 </body>
 </html>
