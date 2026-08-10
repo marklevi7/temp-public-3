@@ -1696,6 +1696,7 @@
     document.querySelector('.talker-marker.' + sp.marker).classList.add('talking');
     micBtn.classList.add('locked');
     micBtn.setAttribute('aria-disabled', 'true');
+    chBigMic.classList.add('locked');
     playBlips([[TONE_RX, 0]]);
 
     setTimeout(function () {
@@ -1725,6 +1726,7 @@
     if (t) t.classList.remove('talking');
     micBtn.classList.remove('locked');
     micBtn.removeAttribute('aria-disabled');
+    chBigMic.classList.remove('locked');
     stopIncomingMeter();
     try { SPEAKERS.a.el.pause(); SPEAKERS.a.el.currentTime = 0; } catch (err) {}
     try { SPEAKERS.b.el.pause(); SPEAKERS.b.el.currentTime = 0; } catch (err) {}
@@ -1757,20 +1759,23 @@
   var DOT_MIN = 7;
   var DOT_MAX = 34;
 
-  function setDot(i, level) {
+  function setDot(i, level, els) {
+    els = els || dotEls;
     var h = DOT_MIN + Math.max(0, Math.min(1, level)) * (DOT_MAX - DOT_MIN);
-    dotEls[i].style.height = h.toFixed(1) + 'px';
+    els[i].style.height = h.toFixed(1) + 'px';
   }
 
-  function resetDots() {
+  function resetDots(els) {
+    els = els || dotEls;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-    for (var i = 0; i < dotEls.length; i++) dotEls[i].style.height = '';
+    for (var i = 0; i < els.length; i++) els[i].style.height = '';
   }
 
   // Three frequency bands -> three dots, so they move independently.
   var BANDS = [[2, 9], [9, 26], [26, 64]];
 
-  function driveDots(sourceNode) {
+  function driveDots(sourceNode, els) {
+    els = els || dotEls;
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
     analyser.smoothingTimeConstant = 0.55;
@@ -1781,7 +1786,7 @@
       for (var i = 0; i < 3; i++) {
         var sum = 0, n = 0;
         for (var j = BANDS[i][0]; j < BANDS[i][1]; j++) { sum += data[j]; n++; }
-        setDot(i, (sum / n / 255) * 2.4);
+        setDot(i, (sum / n / 255) * 2.4, els);
       }
       rafId = requestAnimationFrame(tick);
     })();
@@ -1812,10 +1817,10 @@
 
   // Buffer-and-send model: audio is captured from the instant of contact and
   // held locally, so nothing is lost while the floor is being granted.
-  function armCapture(stream) {
+  function armCapture(stream, els) {
     if (audioCtx) {
       if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-      try { driveDots(audioCtx.createMediaStreamSource(stream)); } catch (err) {}
+      try { driveDots(audioCtx.createMediaStreamSource(stream), els); } catch (err) {}
     }
     chunks = [];
     try {
@@ -1829,7 +1834,7 @@
     } catch (err) { recorder = null; }
   }
 
-  function beginCapture() {
+  function beginCapture(els) {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       micUnavailable('אין תמיכה במיקרופון בדפדפן הזה');
       return;
@@ -1841,7 +1846,7 @@
     // Fast path: permission already granted, so capture begins on this very
     // tick — the buffer starts the instant the finger lands, nothing clipped.
     if (micStream && micStream.active) {
-      armCapture(micStream);
+      armCapture(micStream, els);
       return;
     }
     ensureStream().then(function (stream) {
@@ -1849,7 +1854,7 @@
       // up by the time this resolves. Keep the stream either way and only skip
       // the meter — otherwise the very first press can never work.
       if (!ptteLive) return;
-      armCapture(stream);
+      armCapture(stream, els);
     }).catch(function (err) {
       micDenied = true;
       var name = (err && err.name) || '';
@@ -1863,13 +1868,18 @@
     });
   }
 
-  function endCapture() {
-    resetDots();
+  function endCapture(els) {
+    resetDots(els);
     try { if (recorder && recorder.state === 'recording') recorder.stop(); } catch (err) {}
     recorder = null;
     // Deliberately keep micStream alive: re-acquiring on every release
     // re-triggers the permission race and kills the next press.
   }
+
+  // One PTT engine drives both the map mic and the chat mic — they are the
+  // same underlying action, just triggered from a different screen.
+  var txInChat = false;
+  var txStartedAt = 0;
 
   function startTalk(e) {
     if (e) e.preventDefault();
@@ -1880,11 +1890,18 @@
     clearTimeout(replyTimer);
     clearTimeout(chainTimer);
     ptteLive = true;
-    micBtn.classList.add('live');
-    micBtn.setAttribute('aria-pressed', 'true');
-    pill.classList.add('active');
+    txInChat = !!(e && e.currentTarget === chBigMic);
+    txStartedAt = Date.now();
+    if (txInChat) {
+      chBigMic.classList.add('live');
+      chatScreen.classList.add('talking');
+    } else {
+      micBtn.classList.add('live');
+      micBtn.setAttribute('aria-pressed', 'true');
+      pill.classList.add('active');
+    }
     playBlips(TONE_ON);
-    beginCapture();
+    beginCapture(txInChat ? chDotEls : dotEls);
     try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) {}
   }
 
@@ -1895,12 +1912,20 @@
     if (!ptteLive) return;
     if (e && e.cancelable) e.preventDefault();
     ptteLive = false;
-    micBtn.classList.remove('live');
-    micBtn.setAttribute('aria-pressed', 'false');
-    pill.classList.remove('active');
-    endCapture();
+    var wasInChat = txInChat;
+    var heldMs = Date.now() - txStartedAt;
+    if (wasInChat) {
+      chBigMic.classList.remove('live');
+      chatScreen.classList.remove('talking');
+    } else {
+      micBtn.classList.remove('live');
+      micBtn.setAttribute('aria-pressed', 'false');
+      pill.classList.remove('active');
+    }
+    endCapture(wasInChat ? chDotEls : dotEls);
     playBlips(TONE_OFF); // rising do-fa-do'
     try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
+    if (wasInChat && heldMs >= 300) addVoiceBubble(heldMs);
     // A second later the other side answers — the natural PTT back-and-forth.
     clearTimeout(replyTimer);
     replyTimer = setTimeout(function () {
@@ -2136,7 +2161,41 @@
   var chBigMic = document.getElementById('chBigMic');
   var chToast = document.getElementById('chToast');
   var chMeter = document.getElementById('chMeter');
+  var chBody = document.getElementById('chBody');
+  var chDotEls = chMeter.querySelectorAll('i');
   var toastTimer = null;
+
+  // Repeating chirp over ~3.4s — the walkie-talkie "coming online" cue,
+  // played once when a chat switches into PTT mode.
+  var TONE_MODE_ON = (function () {
+    var blips = [];
+    for (var rep = 0; rep < 3; rep++) {
+      var base = rep * 1.15;
+      blips.push([880,     base,        0.09, 0.42]); // A5
+      blips.push([1174.66, base + 0.13, 0.09, 0.50]); // D6
+    }
+    return blips;
+  })();
+
+  function addVoiceBubble(ms) {
+    var secs = Math.max(1, Math.round(ms / 1000));
+    var mm = Math.floor(secs / 60), ss = secs % 60;
+    var dur = mm + ':' + (ss < 10 ? '0' : '') + ss;
+    var now = new Date();
+    var tm = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+    var bars = '';
+    for (var i = 0; i < 22; i++) {
+      bars += '<i style="height:' + (6 + Math.round(Math.random() * 8)) + 'px"></i>';
+    }
+    var msg = document.createElement('div');
+    msg.className = 'ch-msg me';
+    msg.innerHTML = '<div class="bubble mine"><div class="vb"><span class="play">' +
+      '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 2.5 13 8l-9 5.5z"/></svg></span>' +
+      '<span class="wave">' + bars + '</span>' +
+      '<span class="dur">' + dur + '</span><span class="dur">' + tm + '</span></div></div>';
+    chBody.appendChild(msg);
+    chBody.scrollTop = chBody.scrollHeight;
+  }
 
   function showToast(msg) {
     chToast.textContent = msg;
@@ -2161,29 +2220,19 @@
     c.addEventListener('click', openChat);
   });
 
-  var chMeterRaf = null;
-  chBigMic.addEventListener('pointerdown', function (e) {
-    e.preventDefault();
-    if (chBigMic.classList.contains('locked')) return;
-    chBigMic.classList.add('live');
-    chatScreen.classList.add('talking');
-    var t = 0;
-    (function tick() {
-      t += 0.18;
-      var bars = chMeter.querySelectorAll('i');
-      bars[0].style.height = (10 + 12 * Math.abs(Math.sin(t * 1.7))).toFixed(0) + 'px';
-      bars[1].style.height = (10 + 20 * Math.abs(Math.sin(t * 2.2 + 1))).toFixed(0) + 'px';
-      bars[2].style.height = (10 + 14 * Math.abs(Math.sin(t * 1.9 + 2))).toFixed(0) + 'px';
-      chMeterRaf = requestAnimationFrame(tick);
-    })();
-  });
-  function chStop() {
-    chBigMic.classList.remove('live');
-    chatScreen.classList.remove('talking');
-    if (chMeterRaf) { cancelAnimationFrame(chMeterRaf); chMeterRaf = null; }
-  }
-  chBigMic.addEventListener('pointerup', chStop);
-  chBigMic.addEventListener('pointerleave', chStop);
+  // The chat mic is the exact same PTT engine as the map mic — same real
+  // capture, same meter, same tones — just aimed at chDotEls and, on
+  // release, dropping a voice bubble into this thread.
+  chBigMic.addEventListener('pointerdown', startTalk);
+  chBigMic.addEventListener('pointerup', stopTalk);
+  chBigMic.addEventListener('pointerleave', stopTalk);
+  chBigMic.addEventListener('pointercancel', stopTalk);
+  chBigMic.addEventListener('touchstart', startTalk, { passive: false });
+  chBigMic.addEventListener('touchend', stopTalk, { passive: false });
+  chBigMic.addEventListener('touchcancel', stopTalk, { passive: false });
+  chBigMic.addEventListener('mousedown', startTalk);
+  chBigMic.addEventListener('mouseleave', stopTalk);
+  chBigMic.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
   // ---- One chat at a time owns PTT ---------------------------------------
   var pttCard = null;          // the .chat-card that currently has PTT
@@ -2256,6 +2305,7 @@
     pttCard = openCard;
     pttCard.classList.add('is-ptt');
     chatPttOn(true);
+    playBlips(TONE_MODE_ON);
     if (previous) showToast('PTT הועבר מ״' + cardName(previous) + '״');
   }, true);
 
