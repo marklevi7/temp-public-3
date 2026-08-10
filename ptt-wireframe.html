@@ -1119,7 +1119,7 @@
         <span class="status-title">הקפצת תרגיל</span>
         <span class="status-flag">תרגול</span>
         <span class="spacer"></span>
-        <span class="ico">
+        <span class="ico" id="statusChatBtn" style="cursor:pointer;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><path d="M20 11.6a8 8 0 0 1-8.6 8 8.6 8.6 0 0 1-3.1-.6L3.5 20.5l1.7-4.7A7.9 7.9 0 0 1 4.3 11.6a8 8 0 0 1 8.1-8h.4a8 8 0 0 1 7.2 8z"/></svg>
         </span>
         <span class="ico">
@@ -2423,6 +2423,15 @@
     openCard = card; paintChatHeader(card); openChat();
     chPtt.click();
   };
+
+  // The emergency widget's chat icon jumps straight into the demo's PTT chat.
+  document.getElementById('statusChatBtn').addEventListener('click', function () {
+    var card = document.querySelectorAll('#chatsScreen .chat-card')[0];
+    openCard = card;
+    paintChatHeader(card);
+    openChat();
+    if (pttCard !== card) chPtt.click();
+  });
   devStates.chatopen = function () {
     openChats();
     var card = document.querySelectorAll('#chatsScreen .chat-card')[0];
