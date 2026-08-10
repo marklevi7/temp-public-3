@@ -854,6 +854,15 @@
     display:flex; align-items:center; justify-content:center;
   }
 
+
+  .cc-ptt{
+    display:none;
+    width:18px;height:18px;
+    margin-inline-start:6px;
+    vertical-align:-3px;
+  }
+  .chat-card.is-ptt .cc-ptt{ display:inline-block; }
+  .chat-card.is-ptt .cc-name{ color:#2c86f1; }
   .chats-fade{
     position:absolute; left:0; right:0; bottom:72px; height:118px;
     background:linear-gradient(to bottom, rgba(255,255,255,0), #fff 78%);
@@ -896,6 +905,7 @@
   .ch-back svg{ stroke:#1b293b; display:block; }
   .ch-av{ position:relative; width:32px; height:32px; flex-shrink:0; }
   .ch-av img{ width:32px;height:32px;border-radius:50%;object-fit:cover;display:block; }
+  .ch-av.nodot::after{ display:none; }
   .ch-av::after{
     content:""; position:absolute; left:0; bottom:0;
     width:9px;height:9px;border-radius:50%;
@@ -1057,6 +1067,8 @@
   <button type="button" data-state="settings">הגדרות</button>
   <button type="button" data-state="chats">בחירת צ׳אט</button>
   <button type="button" data-state="chatlist">מסך צ׳אטים</button>
+  <button type="button" data-state="chatopen">צ׳אט רגיל</button>
+  <button type="button" data-state="chatptt">צ׳אט עם PTT</button>
   <span class="lbl">סימון</span>
   <button type="button" class="tool" id="tPen">✏️ עיפרון</button>
   <button type="button" class="tool" id="tArrow">➜ חץ</button>
@@ -1319,7 +1331,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">יוסי ישראלי</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>יוסי ישראלי</div>
               <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
             </div>
             <div class="cc-time">
@@ -1331,7 +1343,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="grp"><svg width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="#2C86F1" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7.5" r="3.6"/><circle cx="17.2" cy="8.8" r="2.7"/><path d="M2.6 18.2c0-3.1 2.9-5 6.4-5s6.4 1.9 6.4 5"/><path d="M17 13.4c2.8.2 5 1.7 5 4.3"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">כיתת כוננות רמת גן</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>כיתת כוננות רמת גן</div>
               <div class="cc-prev">דמויות חשודות מתחבאות ב...<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linejoin="round"><path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v11H3z"/><circle cx="12" cy="13.5" r="3.2"/></svg></div>
             </div>
             <div class="cc-time">
@@ -1343,7 +1355,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="ini" style="background:#f3ddd9;color:#b4483a">ר״ע</span><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">ראובן עוז</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>ראובן עוז</div>
               <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
             </div>
             <div class="cc-time">
@@ -1356,7 +1368,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="ev"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 1V3H2C0.895431 3 0 3.89543 0 5V19C0 20.1046 0.895431 21 2 21H18C19.1046 21 20 20.1046 20 19V9V7V5C20 3.89543 19.1046 3 18 3H17V1C17 0.447715 16.5523 0 16 0C15.4477 0 15 0.447715 15 1V3H5V1C5 0.447715 4.55228 0 4 0C3.44772 0 3 0.447715 3 1ZM16 5H4H2V7H18V5H16ZM2 9V19H18V9H2ZM4 12C4 11.4477 4.44772 11 5 11H15C15.5523 11 16 11.4477 16 12C16 12.5523 15.5523 13 15 13H5C4.44772 13 4 12.5523 4 12ZM5 15C4.44772 15 4 15.4477 4 16C4 16.5523 4.44772 17 5 17H8C8.55229 17 9 16.5523 9 16C9 15.4477 8.55229 15 8 15H5Z" fill="#1B293B"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">הרצל 60, נתניה</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>הרצל 60, נתניה</div>
               <div class="cc-prev">דניאל תורג׳מן: הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק...</div>
             </div>
             <div class="cc-time">
@@ -1369,7 +1381,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="ini" style="background:#dcecdf;color:#2c7a43">א״מ</span><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">אילן מעוז</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>אילן מעוז</div>
               <div class="cc-voice"><span>0:45</span><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></div>
             </div>
             <div class="cc-time">
@@ -1381,7 +1393,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="ev"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 1V3H2C0.895431 3 0 3.89543 0 5V19C0 20.1046 0.895431 21 2 21H18C19.1046 21 20 20.1046 20 19V9V7V5C20 3.89543 19.1046 3 18 3H17V1C17 0.447715 16.5523 0 16 0C15.4477 0 15 0.447715 15 1V3H5V1C5 0.447715 4.55228 0 4 0C3.44772 0 3 0.447715 3 1ZM16 5H4H2V7H18V5H16ZM2 9V19H18V9H2ZM4 12C4 11.4477 4.44772 11 5 11H15C15.5523 11 16 11.4477 16 12C16 12.5523 15.5523 13 15 13H5C4.44772 13 4 12.5523 4 12ZM5 15C4.44772 15 4 15.4477 4 16C4 16.5523 4.44772 17 5 17H8C8.55229 17 9 16.5523 9 16C9 15.4477 8.55229 15 8 15H5Z" fill="#1B293B"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">השקמה 2, נתניה</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>השקמה 2, נתניה</div>
               <div class="cc-voice"><span>0:45</span><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg><span>דניאל תורג׳מן:</span></div>
             </div>
             <div class="cc-time">
@@ -1393,7 +1405,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="ini" style="background:#e0e5f2;color:#3b4d86">נ״א</span><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">נדב אבידן</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>נדב אבידן</div>
               <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
             </div>
             <div class="cc-time">
@@ -1405,7 +1417,7 @@
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="grp"><svg width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="#2C86F1" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7.5" r="3.6"/><circle cx="17.2" cy="8.8" r="2.7"/><path d="M2.6 18.2c0-3.1 2.9-5 6.4-5s6.4 1.9 6.4 5"/><path d="M17 13.4c2.8.2 5 1.7 5 4.3"/></svg></span></span>
             <div class="cc-text">
-              <div class="cc-name">מפקדי מרחב</div>
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 24 26" fill="none" stroke="#2c86f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="18" rx="2.4"/><path d="M6.6 10.5h7.8v4.2H6.6z"/><path d="M20 3v6"/><path d="M17 7.5h6"/></svg>מפקדי מרחב</div>
               <div class="cc-prev">הגעתי ראשון לאירוע. לא זיהיתי את החשוד עדין. הבחנתי בתיק חשוד...</div>
             </div>
             <div class="cc-time">
@@ -2005,6 +2017,9 @@
     stopReceiving();
     settingsEl.classList.remove('open');
     closeChats();
+    closeChat();
+    if (typeof pttCard !== 'undefined' && pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
+    chatPttOn(false);
     document.getElementById('micNote').classList.remove('show');
     if (!pttEnabled) { pttEnabled = true; applyPtt(); }
   }
@@ -2135,9 +2150,10 @@
     chatScreen.classList.toggle('ptt', on);
     chPtt.classList.toggle('on', on);
   }
+  // Only the disabled case lives here — the owner logic is further down,
+  // where PTT is moved between chats.
   chPtt.addEventListener('click', function () {
-    if (!pttEnabled) { showToast('PTT כבוי בהגדרות'); return; }
-    chatPttOn(!chatScreen.classList.contains('ptt'));
+    if (!pttEnabled) { showToast('PTT כבוי בהגדרות'); }
   });
   document.getElementById('chBx').addEventListener('click', function () { chatPttOn(false); });
   document.querySelector('#chatScreen .ch-back').addEventListener('click', closeChat);
@@ -2168,6 +2184,105 @@
   }
   chBigMic.addEventListener('pointerup', chStop);
   chBigMic.addEventListener('pointerleave', chStop);
+
+  // ---- One chat at a time owns PTT ---------------------------------------
+  var pttCard = null;          // the .chat-card that currently has PTT
+  var openCard = null;         // the card whose chat is on screen
+
+  function cardName(card) {
+    return card.querySelector('.cc-name').textContent.trim();
+  }
+
+  function paintChatHeader(card) {
+    var nameEl = document.querySelector('#chatScreen .ch-name');
+    var avWrap = document.querySelector('#chatScreen .ch-av');
+    nameEl.textContent = cardName(card);
+    var ph = card.querySelector('.cc-avatar .ph');
+    var ini = card.querySelector('.cc-avatar .ini');
+    var grp = card.querySelector('.cc-avatar .grp');
+    var ev = card.querySelector('.cc-avatar .ev');
+    avWrap.innerHTML = '';
+    if (ph) {
+      var img = document.createElement('img');
+      img.src = ph.src;
+      avWrap.appendChild(img);
+    } else {
+      var s = document.createElement('span');
+      s.style.cssText = 'width:32px;height:32px;border-radius:50%;display:flex;' +
+        'align-items:center;justify-content:center;font-size:12px;font-weight:700;';
+      if (ini) {
+        s.textContent = ini.textContent;
+        s.style.background = ini.style.background;
+        s.style.color = ini.style.color;
+      } else if (grp) {
+        s.innerHTML = grp.innerHTML;
+        s.style.background = '#e3ecf7';
+      } else if (ev) {
+        s.innerHTML = ev.innerHTML;
+        s.style.background = '#bbbfc4';
+      }
+      avWrap.appendChild(s);
+    }
+    // no availability dot on groups and events
+    avWrap.style.setProperty('--dot', ph ? 'block' : 'none');
+    avWrap.classList.toggle('nodot', !ph);
+  }
+
+  function syncPttToChat() {
+    chatPttOn(!!openCard && openCard === pttCard);
+  }
+
+  // re-bind card taps so the chat opens with that chat's identity
+  document.querySelectorAll('#chatsScreen .chat-card').forEach(function (card) {
+    card.addEventListener('click', function () {
+      openCard = card;
+      paintChatHeader(card);
+      syncPttToChat();
+      openChat();
+    });
+  });
+
+  // the header toggle now moves PTT between chats
+  chPtt.addEventListener('click', function () {
+    if (!pttEnabled || !openCard) return;
+    if (pttCard === openCard) {          // turning it off here
+      pttCard.classList.remove('is-ptt');
+      pttCard = null;
+      chatPttOn(false);
+      return;
+    }
+    var previous = pttCard;
+    if (previous) previous.classList.remove('is-ptt');
+    pttCard = openCard;
+    pttCard.classList.add('is-ptt');
+    chatPttOn(true);
+    if (previous) showToast('PTT הועבר מ״' + cardName(previous) + '״');
+  }, true);
+
+  document.getElementById('chBx').addEventListener('click', function () {
+    if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
+  }, true);
+
+  // switching PTT off in settings clears the owning chat too
+  pttToggle.addEventListener('click', function () {
+    if (!pttEnabled && pttCard) {
+      pttCard.classList.remove('is-ptt');
+      pttCard = null;
+      chatPttOn(false);
+    }
+  });
+
+  devStates.chatptt = function () {
+    openChats();
+    var card = document.querySelectorAll('#chatsScreen .chat-card')[0];
+    openCard = card; paintChatHeader(card); openChat();
+    chPtt.click();
+  };
+  devStates.chatopen = function () {
+    openChats();
+    var card = document.querySelectorAll('#chatsScreen .chat-card')[0];
+    openCard = card; paintChatHeader(card); syncPttToChat(); openChat();
+  };
 </script>
 </body>
 </html>
