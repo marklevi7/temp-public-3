@@ -2199,21 +2199,22 @@
     chTimerEl.textContent = '0:00';
   }
 
-  // Walkie-talkie "coming online / going offline" cues. Groups of 2, 3, 4
-  // beeps, 25% faster than a plain beat. ON climbs pitch and group size;
-  // OFF is the exact mirror — 4, 3, 2 beeps, falling pitch.
+  // Walkie-talkie "coming online / going offline" cues. Each group of beeps
+  // is one chord, repeated — ON steps 2, then 3, then 4 beeps, chord rising
+  // each group; OFF is 4 beeps then 4 beeps, chord falling.
   var MODE_STEP = 0.07 * 0.75;
   var MODE_LEN = 0.09 * 0.75;
-  var MODE_NOTES_UP = [622.25, 783.99, 1046.50, 1318.51]; // D#5 G5 C6 E6
-  var MODE_NOTES_DOWN = MODE_NOTES_UP.slice().reverse();  // E6 C6 G5 D#5
+  var MODE_CHORDS_UP = [622.25, 783.99, 1046.50];   // D#5, G5, C6 — rising
+  var MODE_CHORDS_DOWN = [1046.50, 622.25];         // C6, D#5 — falling
 
-  function buildModeTone(counts, notes, gainFrom, gainStep) {
+  function buildModeTone(counts, chords, gainFrom, gainStep) {
     var blips = [];
     var t = 0;
     for (var g = 0; g < counts.length; g++) {
       var n = counts[g];
+      var freq = chords[g];
       for (var i = 0; i < n; i++) {
-        blips.push([notes[i], t, MODE_LEN, gainFrom + i * gainStep]);
+        blips.push([freq, t, MODE_LEN, gainFrom + g * gainStep]);
         t += MODE_STEP;
       }
       t += MODE_STEP * 1.6;
@@ -2221,8 +2222,8 @@
     return blips;
   }
 
-  var TONE_MODE_ON = buildModeTone([2, 3, 4], MODE_NOTES_UP, 0.38, 0.06);
-  var TONE_MODE_OFF = buildModeTone([4, 3, 2], MODE_NOTES_DOWN, 0.50, -0.06);
+  var TONE_MODE_ON = buildModeTone([2, 3, 4], MODE_CHORDS_UP, 0.40, 0.05);
+  var TONE_MODE_OFF = buildModeTone([4, 4], MODE_CHORDS_DOWN, 0.50, -0.08);
 
   var chVoiceMark = document.getElementById('chVoiceMark');
   var chVoiceCC = document.getElementById('chVoiceCC');
