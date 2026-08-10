@@ -16,18 +16,14 @@ Model: PTT is a **mode** you switch on inside a chat. Optional. Per chat.
 
 **A2 — Enable when another chat already has PTT**
 1. Tap the walkie-talkie in chat B while chat A is the PTT chat
-2. Confirm: `PTT פעיל ב״<שם צ׳אט A>״. להעביר לכאן?` — העבר / ביטול
-3. On העבר: A silently drops back to a normal chat, B becomes the PTT chat
-4. On ביטול: nothing changes
+2. PTT moves to B immediately, no dialog
+3. Chat A silently drops back to a normal chat
+4. Toast: `PTT הועבר מ״<שם צ׳אט A>״`
 
-**A3 — Enable while global PTT is off**
+**A3 — Enable while PTT is switched off in settings**
 1. Tap the walkie-talkie
 2. Toast: `PTT כבוי בהגדרות` with a shortcut to settings
 3. Nothing is enabled
-
-**A4 — Enable from settings**
-1. Settings shows the current PTT chat, or `לא נבחר`
-2. Tapping it opens the chat with PTT already on
 
 ---
 
@@ -39,8 +35,9 @@ Tap X → banner slides away, icon returns to outline, input bar returns. No PTT
 **B2 — Toggle the header icon**
 Same result as B1.
 
-**B3 — Global PTT off**
-Settings toggle off → the active PTT chat drops to normal, mic button disappears.
+**B3 — PTT switched off in settings**
+The system-level `PTT כן / לא` setting is turned off → the active PTT chat drops
+to normal, the walkie-talkie icon disappears from every chat header, mic button gone.
 
 **B4 — Moved to another chat**
 See A2. The old chat reverts with no prompt and no message in the thread.
@@ -142,7 +139,7 @@ PTT is active on the last device that enabled it. The other shows the normal cha
 | Chat (1-on-1 and group) | walkie-talkie header icon, blue banner, mic button replacing the input bar, voice bubbles |
 | Chats list | the PTT chat shows a small walkie-talkie marker on its row |
 | Map / home | mic transmits to the PTT chat; dock shows the chat name and incoming speaker |
-| Settings | global PTT on/off; shows which single chat is currently PTT |
+| Settings | system-level `PTT כן / לא`; shows which single chat is currently PTT |
 | Notifications | incoming transmission while backgrounded |
 
 ---
@@ -151,6 +148,5 @@ PTT is active on the last device that enabled it. The other shows the normal cha
 
 1. Should the map mic be disabled entirely when no chat has PTT?
 2. Does turning PTT on post a system line in the thread (`מצב PTT הופעל`), or stay silent?
-3. Is the transfer confirmation in A2 needed, or should it just move?
-4. Can a group have PTT, or only 1-on-1?
-5. Should the PTT chat pin to the top of the chats list?
+3. Can a group have PTT, or only 1-on-1?
+4. Should the PTT chat pin to the top of the chats list?
