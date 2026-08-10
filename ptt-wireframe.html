@@ -1033,6 +1033,16 @@
   }
   .chat.talking .ch-meter{ display:flex; }
   .ch-meter i{ width:6px; height:8px; border-radius:3px; background:#2c86f1; display:block; }
+  .ch-rec{
+    display:none;
+    align-items:center; gap:8px;
+    margin-inline-end:18px;
+    font-size:14px; font-weight:700; color:#1b293b;
+    font-variant-numeric: tabular-nums;
+  }
+  .chat.talking .ch-rec{ display:flex; }
+  .ch-rec .dot{ width:9px;height:9px;border-radius:50%;background:#f34545; animation:chRecPulse 1s infinite; }
+  @keyframes chRecPulse{ 0%,100%{opacity:1} 50%{opacity:.25} }
 
   .toast{
     position:absolute;
@@ -1501,6 +1511,7 @@
       </div>
 
       <div class="ch-ptt-bar">
+        <span class="ch-rec" id="chRec"><i class="dot"></i><b id="chTimer">0:00</b></span>
         <span class="ch-meter" id="chMeter"><i></i><i></i><i></i></span>
         <button class="ch-bigmic" id="chBigMic" type="button"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></button>
       </div>
@@ -1895,6 +1906,7 @@
     if (txInChat) {
       chBigMic.classList.add('live');
       chatScreen.classList.add('talking');
+      chTimerStart();
     } else {
       micBtn.classList.add('live');
       micBtn.setAttribute('aria-pressed', 'true');
@@ -1917,6 +1929,7 @@
     if (wasInChat) {
       chBigMic.classList.remove('live');
       chatScreen.classList.remove('talking');
+      chTimerStop();
     } else {
       micBtn.classList.remove('live');
       micBtn.setAttribute('aria-pressed', 'false');
@@ -2163,19 +2176,48 @@
   var chMeter = document.getElementById('chMeter');
   var chBody = document.getElementById('chBody');
   var chDotEls = chMeter.querySelectorAll('i');
+  var chTimerEl = document.getElementById('chTimer');
+  var chTimerIv = null;
   var toastTimer = null;
 
-  // Repeating chirp over ~3.4s — the walkie-talkie "coming online" cue,
-  // played once when a chat switches into PTT mode.
-  var TONE_MODE_ON = (function () {
+  function chTimerStart() {
+    chTimerEl.textContent = '0:00';
+    chTimerIv = setInterval(function () {
+      var secs = Math.floor((Date.now() - txStartedAt) / 1000);
+      var mm = Math.floor(secs / 60), ss = secs % 60;
+      chTimerEl.textContent = mm + ':' + (ss < 10 ? '0' : '') + ss;
+    }, 200);
+  }
+  function chTimerStop() {
+    clearInterval(chTimerIv);
+    chTimerIv = null;
+    chTimerEl.textContent = '0:00';
+  }
+
+  // Walkie-talkie "coming online / going offline" cues. Groups of 2, 3, 4
+  // beeps, 25% faster than a plain beat. ON climbs pitch and group size;
+  // OFF is the exact mirror — 4, 3, 2 beeps, falling pitch.
+  var MODE_STEP = 0.07 * 0.75;
+  var MODE_LEN = 0.09 * 0.75;
+  var MODE_NOTES_UP = [622.25, 783.99, 1046.50, 1318.51]; // D#5 G5 C6 E6
+  var MODE_NOTES_DOWN = MODE_NOTES_UP.slice().reverse();  // E6 C6 G5 D#5
+
+  function buildModeTone(counts, notes, gainFrom, gainStep) {
     var blips = [];
-    for (var rep = 0; rep < 3; rep++) {
-      var base = rep * 1.15;
-      blips.push([880,     base,        0.09, 0.42]); // A5
-      blips.push([1174.66, base + 0.13, 0.09, 0.50]); // D6
+    var t = 0;
+    for (var g = 0; g < counts.length; g++) {
+      var n = counts[g];
+      for (var i = 0; i < n; i++) {
+        blips.push([notes[i], t, MODE_LEN, gainFrom + i * gainStep]);
+        t += MODE_STEP;
+      }
+      t += MODE_STEP * 1.6;
     }
     return blips;
-  })();
+  }
+
+  var TONE_MODE_ON = buildModeTone([2, 3, 4], MODE_NOTES_UP, 0.38, 0.06);
+  var TONE_MODE_OFF = buildModeTone([4, 3, 2], MODE_NOTES_DOWN, 0.50, -0.06);
 
   function addVoiceBubble(ms) {
     var secs = Math.max(1, Math.round(ms / 1000));
@@ -2230,6 +2272,12 @@
   chBigMic.addEventListener('touchstart', startTalk, { passive: false });
   chBigMic.addEventListener('touchend', stopTalk, { passive: false });
   chBigMic.addEventListener('touchcancel', stopTalk, { passive: false });
+  chBigMic.addEventListener('touchmove', function (e) {
+    if (!ptteLive || !txInChat || !e.touches || !e.touches[0]) return;
+    var rect = chBigMic.getBoundingClientRect();
+    var t = e.touches[0];
+    if (!isInsideRect(t.clientX, t.clientY, rect)) stopTalk(e);
+  }, { passive: false });
   chBigMic.addEventListener('mousedown', startTalk);
   chBigMic.addEventListener('mouseleave', stopTalk);
   chBigMic.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -2298,6 +2346,7 @@
       pttCard.classList.remove('is-ptt');
       pttCard = null;
       chatPttOn(false);
+      playBlips(TONE_MODE_OFF);
       return;
     }
     var previous = pttCard;
@@ -2310,7 +2359,7 @@
   }, true);
 
   document.getElementById('chBx').addEventListener('click', function () {
-    if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
+    if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; playBlips(TONE_MODE_OFF); }
   }, true);
 
   // switching PTT off in settings clears the owning chat too
@@ -2319,6 +2368,7 @@
       pttCard.classList.remove('is-ptt');
       pttCard = null;
       chatPttOn(false);
+      playBlips(TONE_MODE_OFF);
     }
   });
 
