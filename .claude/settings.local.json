@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__upload_assets",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__use_figma"
+    ]
+  }
+}
