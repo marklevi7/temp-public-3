@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__upload_assets",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__use_figma",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__get_screenshot",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__get_metadata",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__get_design_context",
+      "mcp__2529e674-55a6-42f9-89c7-2121e7bcdcb6__download_assets"
+    ]
+  }
+}
