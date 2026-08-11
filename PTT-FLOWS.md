@@ -132,7 +132,38 @@ PTT is active on the last device that enabled it. The other shows the normal cha
 
 ---
 
-## G. Screens touched
+## G. Incoming PTT requests
+
+**G1 — Request arrives, you're not in any PTT chat**
+1. Full-screen dialog: their avatar, name, "מבקש/ת להתחיל איתך שיחת PTT"
+2. Ring plays — 2 beeps, pause, 2 beeps — plus vibration
+3. One button: `התחל PTT עם <שם>`
+
+**G2 — Request arrives while you're already live with chat1**
+Same dialog, over whatever screen is open. Accepting moves PTT to the requester
+exactly like A2 — chat1 reverts, toast names it. No difference from G1 otherwise.
+
+**G3 — Accept**
+Tap the button → PTT switches to the requester's chat, banner appears there.
+
+**G4 — Decline**
+Tap X → dialog closes, nothing changes, no toast, no trace left for the requester.
+
+**G5 — PTT is off in settings**
+The request can't arrive — the sender hits A3 (`PTT כבוי בהגדרות`) before it reaches you.
+
+**G6 — A second request arrives while the first is still open**
+Replaces the dialog's content immediately. No stack, no queue — only the newest shows.
+
+**G7 — Request arrives mid-transmission (you're holding the mic)**
+Held back until you release. Can never interrupt an active press.
+
+**G8 — Ignored**
+No timeout. Stays open until Accept or X.
+
+---
+
+## H. Screens touched
 
 | Screen | Change |
 |---|---|
@@ -144,7 +175,7 @@ PTT is active on the last device that enabled it. The other shows the normal cha
 
 ---
 
-## H. Open questions
+## I. Open questions
 
 1. Should the map mic be disabled entirely when no chat has PTT?
 2. Does turning PTT on post a system line in the thread (`מצב PTT הופעל`), or stay silent?
