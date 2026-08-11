@@ -1177,6 +1177,35 @@
   }
   .toast.show{ opacity:1; }
 
+  /* Incoming PTT request — another chat asking to take over the channel
+     while you're already live with someone else. Floats above whatever
+     screen is open (map, chat, chats list). */
+  .ptt-request{
+    position:absolute;
+    left:12px; right:12px; top:-120px;
+    z-index:40;
+    background:#fff;
+    border-radius:16px;
+    box-shadow:0 10px 28px -8px rgba(0,0,0,.35);
+    padding:14px;
+    transition:top .28s cubic-bezier(.2,.8,.3,1);
+  }
+  .ptt-request.show{ top:16px; }
+  .pr-row{ display:flex; align-items:center; gap:10px; }
+  .pr-av{ width:40px;height:40px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center; }
+  .pr-av img{ width:100%;height:100%;object-fit:cover;display:block; }
+  .pr-text{ flex:1; min-width:0; text-align:right; }
+  .pr-name{ font-size:15px;font-weight:700;color:#1b293b; }
+  .pr-sub{ font-size:12.5px;color:#767f89;margin-top:2px; }
+  .pr-actions{ display:flex; gap:10px; margin-top:12px; }
+  .pr-btn{
+    flex:1; border:none; border-radius:10px;
+    padding:10px 0; font-size:14px; font-weight:700;
+    cursor:pointer;
+  }
+  .pr-btn.decline{ background:#f4f4f5; color:#1b293b; }
+  .pr-btn.accept{ background:#2c86f1; color:#fff; }
+
   .hint{
     font-size:11px;
     color:var(--muted);
@@ -1206,10 +1235,24 @@
   <span class="lbl">קצה</span>
   <button type="button" data-state="pttoff">PTT כבוי</button>
   <button type="button" data-state="micerr">מיקרופון חסום</button>
+  <button type="button" data-state="pttrequest">בקשת PTT נכנסת</button>
 </div>
 <canvas id="markup"></canvas>
 <div class="phone">
     <button type="button" class="dev-hotspot" id="devHotspot" aria-hidden="true"></button>
+    <div class="ptt-request" id="pttRequest">
+      <div class="pr-row">
+        <span class="pr-av" id="prAv"></span>
+        <div class="pr-text">
+          <div class="pr-name" id="prName"></div>
+          <div class="pr-sub">מבקש/ת לעבור אליו את שידור ה-PTT</div>
+        </div>
+      </div>
+      <div class="pr-actions">
+        <button type="button" class="pr-btn decline" id="prDecline">התעלם</button>
+        <button type="button" class="pr-btn accept" id="prAccept">עבור לשם</button>
+      </div>
+    </div>
     <div class="header">
       <div class="statusbar">
         <span class="sb-icons">
@@ -2216,6 +2259,7 @@
     closeChat();
     if (typeof pttCard !== 'undefined' && pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
     chatPttOn(false);
+    if (typeof hidePttRequest === 'function') hidePttRequest();
     document.getElementById('micNote').classList.remove('show');
     if (!pttEnabled) { pttEnabled = true; applyPtt(); }
   }
@@ -2523,6 +2567,72 @@
     chatPttOn(!!openCard && openCard === pttCard);
   }
 
+  // ---- Incoming PTT request: chat2 asks to take the channel while you're
+  // already live with chat1. Floats over whatever screen is open; accepting
+  // moves PTT the same way the header toggle does, with the same toast.
+  var pttRequestEl = document.getElementById('pttRequest');
+  var prAvEl = document.getElementById('prAv');
+  var prNameEl = document.getElementById('prName');
+  var pendingRequestCard = null;
+
+  function paintAvatarInto(card, wrap) {
+    wrap.innerHTML = '';
+    var ph = card.querySelector('.cc-avatar .ph');
+    var ini = card.querySelector('.cc-avatar .ini');
+    var grp = card.querySelector('.cc-avatar .grp');
+    var ev = card.querySelector('.cc-avatar .ev');
+    if (ph) {
+      var img = document.createElement('img');
+      img.src = ph.src;
+      wrap.appendChild(img);
+    } else {
+      var s = document.createElement('span');
+      s.style.cssText = 'width:100%;height:100%;border-radius:50%;display:flex;' +
+        'align-items:center;justify-content:center;font-size:13px;font-weight:700;';
+      if (ini) {
+        s.textContent = ini.textContent;
+        s.style.background = ini.style.background;
+        s.style.color = ini.style.color;
+      } else if (grp) {
+        s.innerHTML = grp.innerHTML;
+        s.style.background = '#e3ecf7';
+      } else if (ev) {
+        s.innerHTML = ev.innerHTML;
+        s.style.background = '#bbbfc4';
+      }
+      wrap.appendChild(s);
+    }
+  }
+
+  function showPttRequest(card) {
+    pendingRequestCard = card;
+    prNameEl.textContent = cardName(card);
+    paintAvatarInto(card, prAvEl);
+    pttRequestEl.classList.add('show');
+    playBlips([[TONE_RX, 0]]);
+    try { if (navigator.vibrate) navigator.vibrate([12, 40, 12]); } catch (err) {}
+  }
+
+  function hidePttRequest() {
+    pttRequestEl.classList.remove('show');
+    pendingRequestCard = null;
+  }
+
+  document.getElementById('prDecline').addEventListener('click', hidePttRequest);
+  document.getElementById('prAccept').addEventListener('click', function () {
+    if (!pendingRequestCard) return;
+    var incoming = pendingRequestCard;
+    var previous = pttCard;
+    if (previous) previous.classList.remove('is-ptt');
+    pttCard = incoming;
+    pttCard.classList.add('is-ptt');
+    if (openCard === incoming) chatPttOn(true);
+    else if (openCard) chatPttOn(false);
+    playBlips(TONE_MODE_ON);
+    if (previous) showToast('PTT הועבר מ״' + cardName(previous) + '״');
+    hidePttRequest();
+  });
+
   // re-bind card taps so the chat opens with that chat's identity
   document.querySelectorAll('#chatsScreen .chat-card').forEach(function (card) {
     card.addEventListener('click', function () {
@@ -2571,6 +2681,17 @@
     var card = document.querySelectorAll('#chatsScreen .chat-card')[0];
     openCard = card; paintChatHeader(card); openChat();
     chPtt.click();
+  };
+
+  // Demo: you're already live with chat1 ("יוסי ישראלי") when chat2
+  // ("כיתת כוננות רמת גן") asks to take the channel.
+  devStates.pttrequest = function () {
+    var cards = document.querySelectorAll('#chatsScreen .chat-card');
+    var chat1 = cards[1], chat2 = cards[2];
+    openChats();
+    openCard = chat1; paintChatHeader(chat1); openChat();
+    if (pttCard !== chat1) chPtt.click();
+    showPttRequest(chat2);
   };
 
   // The emergency widget's chat icon jumps straight into the demo's PTT chat.
