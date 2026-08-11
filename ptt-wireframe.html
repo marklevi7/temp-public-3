@@ -156,9 +156,52 @@
   .status-badge{
     width:34px;height:34px;
     border-radius:9px;
-    background:var(--danger);
+    background:#f34545;
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
+    cursor:pointer;
+  }
+
+  /* Alert escalation dialog — Figma 6322:5122/5207, replicated exactly. */
+  .alert-scrim{
+    display:none;
+    position:absolute; inset:0;
+    background:rgba(0,0,0,.4);
+    z-index:45;
+    align-items:center; justify-content:center;
+  }
+  .alert-scrim.show{ display:flex; }
+  .alert-dialog{
+    width:328px; max-width:calc(100% - 32px);
+    background:#fff; border-radius:20px;
+    padding:24px;
+    display:flex; flex-direction:column; gap:16px;
+    box-sizing:border-box;
+    box-shadow:0 20px 40px -10px rgba(0,0,0,.35);
+  }
+  .ad-head{ display:flex; align-items:center; justify-content:space-between; direction:rtl; gap:8px; }
+  .ad-close{ cursor:pointer; display:flex; padding:4px; flex-shrink:0; }
+  .ad-title{ display:flex; align-items:center; gap:4px; }
+  .ad-name{ font-size:16px; color:#1b293b; white-space:nowrap; }
+  .ad-dot{ font-size:16px; font-weight:600; color:#a4a9b1; }
+  .ad-place{ font-size:16px; font-weight:600; color:#1b293b; white-space:nowrap; }
+  .ad-badge{
+    width:28px;height:28px; border-radius:6px;
+    background:#f34545;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    margin-inline-start:6px;
+  }
+  .ad-body{ display:flex; flex-direction:column; gap:10px; text-align:right; direction:rtl; }
+  .ad-time{ font-size:12px; color:#767f89; }
+  .ad-updated{ font-size:16px; color:#1e1e1e; }
+  .ad-updated b{ font-weight:700; }
+  .ad-msg{ font-size:16px; line-height:20px; color:#1e1e1e; }
+  .ad-btn{
+    width:100%; height:40px;
+    background:#2d85f2; border:2px solid #2c86f1; border-radius:12px;
+    color:#fff; font-size:16px; font-weight:700;
+    cursor:pointer;
   }
   .status-badge svg{ fill:#fff; }
   .status-title{
@@ -1236,6 +1279,7 @@
   <button type="button" data-state="pttoff">PTT כבוי</button>
   <button type="button" data-state="micerr">מיקרופון חסום</button>
   <button type="button" data-state="pttrequest">בקשת PTT נכנסת</button>
+  <button type="button" data-state="alertdialog">התרעת הקפצה</button>
 </div>
 <canvas id="markup"></canvas>
 <div class="phone">
@@ -1251,6 +1295,29 @@
       <div class="pr-actions">
         <button type="button" class="pr-btn decline" id="prDecline">התעלם</button>
         <button type="button" class="pr-btn accept" id="prAccept">עבור לשם</button>
+      </div>
+    </div>
+    <div class="alert-scrim" id="alertScrim">
+      <div class="alert-dialog">
+        <div class="ad-head">
+          <span class="ad-close" id="alertClose">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </span>
+          <span class="ad-title">
+            <span class="ad-name">אביר לילה ג׳</span>
+            <span class="ad-dot">•</span>
+            <span class="ad-place">רמת גן</span>
+            <span class="ad-badge">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10v4a1 1 0 0 0 1 1h2.2l8.8 4.2V5.8L6.7 10H4.5a1 1 0 0 0-1 0z"/><path d="M18.4 9.4a3.6 3.6 0 0 1 0 5.2"/><path d="M6.9 15.2 8 20"/></svg>
+            </span>
+          </span>
+        </div>
+        <div class="ad-body">
+          <div class="ad-time">לפני 2 דקות</div>
+          <div class="ad-updated"><b>אביר לילה ג׳</b>&nbsp;החמרת הקפצה</div>
+          <div class="ad-msg">היכנסו למרחב המוגן ונעלו דלתות. הישארו בפנים עד הודעה חדשה.</div>
+        </div>
+        <button type="button" class="ad-btn" id="alertCloseBtn">סגור</button>
       </div>
     </div>
     <div class="header">
@@ -2260,6 +2327,7 @@
     if (typeof pttCard !== 'undefined' && pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
     chatPttOn(false);
     if (typeof hidePttRequest === 'function') hidePttRequest();
+    if (typeof hideAlertDialog === 'function') hideAlertDialog();
     document.getElementById('micNote').classList.remove('show');
     if (!pttEnabled) { pttEnabled = true; applyPtt(); }
   }
@@ -2618,6 +2686,14 @@
     pendingRequestCard = null;
   }
 
+  // ---- Alert escalation dialog (Figma 6322:5207) -------------------------
+  var alertScrim = document.getElementById('alertScrim');
+  function showAlertDialog() { alertScrim.classList.add('show'); }
+  function hideAlertDialog() { alertScrim.classList.remove('show'); }
+  document.querySelector('.status-badge').addEventListener('click', showAlertDialog);
+  document.getElementById('alertClose').addEventListener('click', hideAlertDialog);
+  document.getElementById('alertCloseBtn').addEventListener('click', hideAlertDialog);
+
   document.getElementById('prDecline').addEventListener('click', hidePttRequest);
   document.getElementById('prAccept').addEventListener('click', function () {
     if (!pendingRequestCard) return;
@@ -2693,6 +2769,8 @@
     if (pttCard !== chat1) chPtt.click();
     showPttRequest(chat2);
   };
+
+  devStates.alertdialog = function () { showAlertDialog(); };
 
   // The emergency widget's chat icon jumps straight into the demo's PTT chat.
   document.getElementById('statusChatBtn').addEventListener('click', function () {
