@@ -779,15 +779,26 @@
 
   /* ---- Prototype control panel (not part of the product) --------------- */
   .devbar{
+    display:none;
     flex-shrink:0;
     background:#20262d;
     padding:8px 10px;
-    display:flex;
     flex-wrap:wrap;
     gap:6px;
     align-items:center;
     direction:rtl;
     border-bottom:1px solid #000;
+  }
+  .devbar.open{ display:flex; }
+  .dev-hotspot{
+    position:absolute;
+    top:0; left:0;
+    width:56px; height:40px;
+    z-index:10;
+    background:transparent;
+    border:none;
+    padding:0;
+    -webkit-tap-highlight-color:transparent;
   }
   .devbar .lbl{
     color:#7d8794;
@@ -1198,6 +1209,7 @@
 </div>
 <canvas id="markup"></canvas>
 <div class="phone">
+    <button type="button" class="dev-hotspot" id="devHotspot" aria-hidden="true"></button>
     <div class="header">
       <div class="statusbar">
         <span class="sb-icons">
@@ -2182,6 +2194,9 @@
 
   // ---- Prototype control panel ------------------------------------------
   var devbar = document.getElementById('devbar');
+  document.getElementById('devHotspot').addEventListener('click', function () {
+    devbar.classList.toggle('open');
+  });
 
   function devMark(state) {
     var bs = devbar.querySelectorAll('button');
