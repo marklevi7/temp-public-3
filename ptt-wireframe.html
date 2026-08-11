@@ -660,8 +660,8 @@
 
 
   /* chat rows: icon + name + preview + time (+ unread) */
-  .set-row.chat{ align-items:flex-start; gap:10px; padding:11px 14px; }
-  .set-row.chat.sel{ background:#dbe9f8; }
+  .set-row.pick{ align-items:flex-start; gap:10px; padding:11px 14px; }
+  .set-row.pick.sel{ background:#dbe9f8; }
   .chat-av{
     width:42px;height:42px;
     border-radius:11px;
@@ -715,7 +715,7 @@
     display:flex;align-items:center;justify-content:center;
   }
   .set-row.sel .name{ color:var(--accent); }
-  .settings.off .set-group.chats{ opacity:.4; pointer-events:none; }
+  .settings.off .set-group.chatpicker{ opacity:.4; pointer-events:none; }
 
   /* mic disabled when PTT is switched off */
   .fab-mic.off{ background:var(--lock); cursor:not-allowed; }
@@ -832,7 +832,8 @@
     color:#1b293b;
     line-height:20px;
   }
-  .cc-name{ font-size:16px; font-weight:600; white-space:nowrap; }
+  .cc-name{ font-size:16px; font-weight:600; white-space:nowrap; display:flex; align-items:center; gap:4px; }
+  .cc-name .cc-ptt{ margin-inline-start:0; flex-shrink:0; }
   .cc-prev{
     font-size:14px; font-weight:400;
     width:205px;
@@ -861,6 +862,10 @@
     width:18px;height:18px;
     margin-inline-start:6px;
     vertical-align:-3px;
+  }
+  .chat-card.is-ptt{
+    background:#eaf3fd;
+    box-shadow:inset -3px 0 0 #2c86f1;
   }
   .chat-card.is-ptt .cc-ptt{ display:inline-block; }
   .chat-card.is-ptt .cc-name{ color:#2c86f1; }
@@ -1080,10 +1085,10 @@
   <button type="button" data-state="chatlist">מסך צ׳אטים</button>
   <button type="button" data-state="chatopen">צ׳אט רגיל</button>
   <button type="button" data-state="chatptt">צ׳אט עם PTT</button>
-  <span class="lbl">סימון</span>
-  <button type="button" class="tool" id="tPen">✏️ עיפרון</button>
-  <button type="button" class="tool" id="tArrow">➜ חץ</button>
-  <button type="button" id="tClear">🗑 נקה</button>
+  <span class="lbl" style="display:none">סימון</span>
+  <button type="button" class="tool" id="tPen" style="display:none">✏️ עיפרון</button>
+  <button type="button" class="tool" id="tArrow" style="display:none">➜ חץ</button>
+  <button type="button" id="tClear" style="display:none">🗑 נקה</button>
   <span class="lbl">קצה</span>
   <button type="button" data-state="pttoff">PTT כבוי</button>
   <button type="button" data-state="micerr">מיקרופון חסום</button>
@@ -1230,8 +1235,8 @@
       </div>
 
       <p class="set-label">שידור אל</p>
-      <div class="set-group chats" id="chatList">
-        <button class="set-row chat sel" type="button" data-chat="אביר לילה ג׳ (תרגול) - 29/7 17:05">
+      <div class="set-group chatpicker" id="chatList">
+        <button class="set-row pick sel" type="button" data-chat="אביר לילה ג׳ (תרגול) - 29/7 17:05">
           <span class="radio"></span>
           <span class="chat-av av-mauve"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V4h9l-2.2 3.6L16 11H7"/></svg></span>
           <span class="chat-main">
@@ -1244,7 +1249,7 @@
             <span class="chat-dot"></span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="קבוצה גדולה">
+        <button class="set-row pick" type="button" data-chat="קבוצה גדולה">
           <span class="radio"></span>
           <span class="chat-av av-grey round"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.4"/><path d="M3.5 18c0-2.5 2.5-4 5.5-4s5.5 1.5 5.5 4M16 14.2c2.4.2 4.5 1.5 4.5 3.8"/></svg></span>
           <span class="chat-main">
@@ -1254,7 +1259,7 @@
             <span class="chat-time">21/7/26</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="הקפצה מותאמת (תרגול) - 17/7 16:22">
+        <button class="set-row pick" type="button" data-chat="הקפצה מותאמת (תרגול) - 17/7 16:22">
           <span class="radio"></span>
           <span class="chat-av av-pink"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a13 13 0 0 1 0 16 13 13 0 0 1 0-16z"/></svg></span>
           <span class="chat-main">
@@ -1267,7 +1272,7 @@
             <span class="chat-badge">1</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="אביר לילה ב׳ (תרגול) - 13/7 13:19">
+        <button class="set-row pick" type="button" data-chat="אביר לילה ב׳ (תרגול) - 13/7 13:19">
           <span class="radio"></span>
           <span class="chat-av av-blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V4h9l-2.2 3.6L16 11H7"/></svg></span>
           <span class="chat-main">
@@ -1280,7 +1285,7 @@
             <span class="chat-badge">1</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
+        <button class="set-row pick" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
           <span class="radio"></span>
           <span class="chat-av av-pale round warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4M12 16.6v.1"/></svg></span>
           <span class="chat-main">
@@ -1290,7 +1295,7 @@
             <span class="chat-time">7/7/26</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="אביר לילה ב׳ (תרגול) - 5/7 20:52">
+        <button class="set-row pick" type="button" data-chat="אביר לילה ב׳ (תרגול) - 5/7 20:52">
           <span class="radio"></span>
           <span class="chat-av av-blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V4h9l-2.2 3.6L16 11H7"/></svg></span>
           <span class="chat-main">
@@ -1303,7 +1308,7 @@
             <span class="chat-badge">1</span>
           </span>
         </button>
-        <button class="set-row chat" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
+        <button class="set-row pick" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
           <span class="radio"></span>
           <span class="chat-av av-pale round warn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4M12 16.6v.1"/></svg></span>
           <span class="chat-main">
@@ -1341,6 +1346,19 @@
       </div>
 
       <div class="chats-scroll">
+        <div class="chat-card">
+          <div class="cc-wrap">
+            <span class="cc-avatar"><span class="ev"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 1V3H2C0.895431 3 0 3.89543 0 5V19C0 20.1046 0.895431 21 2 21H18C19.1046 21 20 20.1046 20 19V9V7V5C20 3.89543 19.1046 3 18 3H17V1C17 0.447715 16.5523 0 16 0C15.4477 0 15 0.447715 15 1V3H5V1C5 0.447715 4.55228 0 4 0C3.44772 0 3 0.447715 3 1ZM16 5H4H2V7H18V5H16ZM2 9V19H18V9H2ZM4 12C4 11.4477 4.44772 11 5 11H15C15.5523 11 16 11.4477 16 12C16 12.5523 15.5523 13 15 13H5C4.44772 13 4 12.5523 4 12ZM5 15C4.44772 15 4 15.4477 4 16C4 16.5523 4.44772 17 5 17H8C8.55229 17 9 16.5523 9 16C9 15.4477 8.55229 15 8 15H5Z" fill="#1B293B"/></svg></span></span>
+            <div class="cc-text">
+              <div class="cc-name"><svg class="cc-ptt" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#2c86f1"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#2c86f1"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#2c86f1"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#2c86f1"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#2c86f1"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#2c86f1"/></svg>הקפצת תרגיל - אביר לילה ב׳</div>
+              <div class="cc-prev">רמת גן • 22:03 • כיתת כוננות רמת גן הצטרפה</div>
+            </div>
+            <div class="cc-time">
+              <span class="t">22:03</span>
+            <span class="cc-badge">3</span>
+            </div>
+          </div>
+        </div>
         <div class="chat-card">
           <div class="cc-wrap">
             <span class="cc-avatar"><img class="ph" alt="" src="data:image/jpeg;base64,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"><span class="st"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="6" fill="#52CC52" stroke="white"/></svg><svg class="ck" width="7.06665" height="5.27967" viewBox="0 0 7.06665 5.27967" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.53566 0.529666L2.63566 4.43944C2.51566 4.55974 2.33566 4.55974 2.21566 4.43944L0.53566 2.72515" stroke="white" stroke-width="1.5" stroke-miterlimit="10"/></svg></span></span>
@@ -2036,9 +2054,9 @@
   });
 
   chatList.addEventListener('click', function (e) {
-    var row = e.target.closest('.set-row.chat');
+    var row = e.target.closest('.set-row.pick');
     if (!row) return;
-    var rows = chatList.querySelectorAll('.set-row.chat');
+    var rows = chatList.querySelectorAll('.set-row.pick');
     for (var i = 0; i < rows.length; i++) rows[i].classList.remove('sel');
     row.classList.add('sel');
     activeChat = row.getAttribute('data-chat');
