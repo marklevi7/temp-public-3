@@ -2480,6 +2480,19 @@
   var TONE_MODE_ON = buildModeTone([2, 3, 4], MODE_CHORDS_UP, 0.40, 0.05);
   var TONE_MODE_OFF = buildModeTone([4, 3, 2], MODE_CHORDS_DOWN, 0.50, -0.06);
 
+  // Incoming PTT request — same voice as the mode-on chirp, but a ring
+  // cadence: two beeps, a pause, two beeps.
+  var TONE_PTT_REQUEST = (function () {
+    var freq = 783.99; // G5, same chord family as TONE_MODE_ON
+    var pause = 0.45;
+    var blips = [];
+    [0, pause + MODE_STEP].forEach(function (base) {
+      blips.push([freq, base, MODE_LEN, 0.42]);
+      blips.push([freq, base + MODE_STEP, MODE_LEN, 0.46]);
+    });
+    return blips;
+  })();
+
   var chVoiceMark = document.getElementById('chVoiceMark');
   var chVoiceCC = document.getElementById('chVoiceCC');
   var chReplyTimer = null;
@@ -2667,7 +2680,7 @@
     prNameEl.textContent = cardName(card);
     paintAvatarInto(card, prAvEl);
     pttRequestEl.classList.add('show');
-    playBlips([[TONE_RX, 0]]);
+    playBlips(TONE_PTT_REQUEST);
     try { if (navigator.vibrate) navigator.vibrate([12, 40, 12]); } catch (err) {}
   }
 
@@ -2678,7 +2691,11 @@
 
   // ---- Alert escalation dialog (Figma 6322:5207) -------------------------
   var alertScrim = document.getElementById('alertScrim');
-  function showAlertDialog() { alertScrim.classList.add('show'); }
+  function showAlertDialog() {
+    alertScrim.classList.add('show');
+    playBlips(TONE_PTT_REQUEST);
+    try { if (navigator.vibrate) navigator.vibrate([12, 40, 12]); } catch (err) {}
+  }
   function hideAlertDialog() { alertScrim.classList.remove('show'); }
   document.querySelector('.status-badge').addEventListener('click', showAlertDialog);
   document.getElementById('alertClose').addEventListener('click', hideAlertDialog);
