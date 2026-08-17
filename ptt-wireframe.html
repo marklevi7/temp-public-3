@@ -811,6 +811,33 @@
   .set-row.sel .name{ color:var(--accent); }
   .settings.off .set-group.chatpicker{ opacity:.4; pointer-events:none; }
 
+  /* open a chat straight from the picker, without changing the PTT selection */
+  .chat-open{
+    display:flex; align-items:center; justify-content:center;
+    width:26px; height:26px; margin-top:6px;
+    border-radius:8px; flex-shrink:0;
+  }
+  .chat-open:active{ background:#eef1f4; }
+
+  /* empty state: no chats/groups available to broadcast to */
+  .chatpicker-empty{
+    display:none;
+    flex-direction:column; align-items:center; text-align:center;
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:34px 24px 26px; margin-bottom:22px;
+  }
+  .cpe-icon{ margin-bottom:12px; opacity:.9; }
+  .cpe-title{ font-size:14.5px; font-weight:700; color:var(--ink); margin:0 0 6px; }
+  .cpe-sub{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 18px; max-width:230px; }
+  .cpe-cta{
+    font-family:inherit; font-size:13.5px; font-weight:700; color:#fff;
+    background:var(--accent); border:none; border-radius:10px;
+    padding:10px 22px; cursor:pointer;
+  }
+  .settings.chat-empty .set-group.chatpicker{ display:none; }
+  .settings.chat-empty .chatpicker-empty{ display:flex; }
+  .settings.chat-empty .chatpicker-hint{ display:none; }
+
   /* mic disabled when PTT is switched off */
   .fab-mic.off{ background:var(--lock); cursor:not-allowed; }
   .talk-pill.off{ opacity:.45; }
@@ -888,6 +915,15 @@
   }
   .chats.open{ display:flex; }
   .chats-scroll{ flex:1; overflow-y:auto; position:relative; }
+  .chats-empty{
+    display:none;
+    flex:1;
+    align-items:center; justify-content:center;
+  }
+  .chats-empty p{ font-size:15px; color:#1b293b; margin:0; }
+  .chats.empty .chats-scroll{ display:none; }
+  .chats.empty .chats-fade{ display:none; }
+  .chats.empty .chats-empty{ display:flex; }
 
   .chat-card{
     height:88px;
@@ -1106,13 +1142,13 @@
 
   .ch-input{
     direction:rtl;
+    position:relative;
     display:flex; align-items:center; gap:10px;
     padding:10px 16px calc(10px + env(safe-area-inset-bottom));
     background:#fff;
     border-top:1px solid var(--gray5);
     flex-shrink:0;
   }
-  .chat.ptt .ch-input{ display:none; }
   .ci-mic{
     width:40px;height:40px;border-radius:50%;
     background:#2c86f1; border:none;
@@ -1128,29 +1164,33 @@
   }
   .ci-field svg{ stroke:#767f89; }
 
-  .ch-ptt-bar{
+  /* PTT send — a small button added to the regular footer, only for the
+     one chat that currently has PTT on. It never replaces the text input. */
+  .ci-ptt-wrap{
     display:none;
-    position:relative;
-    background:#f4f4f5;
-    padding:22px 0 calc(22px + env(safe-area-inset-bottom));
-    justify-content:center;
     flex-shrink:0;
   }
-  /* Timer + meter float above the mic so they never shift it sideways
+  .chat.ptt .ci-ptt-wrap{ display:flex; }
+  /* Timer + meter float above the button so it never shifts sideways
      when they appear — the button's position never changes on press. */
   .ch-live-info{
     display:none;
     position:absolute;
-    top:2px; left:50%;
+    bottom:52px; left:50%;
     transform:translateX(-50%);
     align-items:center;
-    gap:16px;
+    gap:10px;
+    background:#fff;
+    border:1px solid var(--gray5);
+    border-radius:12px;
+    padding:6px 12px;
+    box-shadow:0 6px 16px -6px rgba(0,0,0,.25);
+    white-space:nowrap;
   }
   .chat.talking .ch-live-info{ display:flex; }
-  .chat.ptt .ch-ptt-bar{ display:flex; }
   .ch-bigmic{
     position:relative;
-    width:96px;height:96px;border-radius:50%;
+    width:40px;height:40px;border-radius:50%;
     background:#2c86f1; border:none;
     display:flex;align-items:center;justify-content:center;
     touch-action:none; user-select:none; -webkit-user-select:none;
@@ -1158,8 +1198,8 @@
   }
   .ch-bigmic svg{ stroke:none; }
   .ch-bigmic.live{
-    transform:scale(1.06);
-    box-shadow:0 6px 20px -4px rgba(44,134,241,.55);
+    transform:scale(1.08);
+    box-shadow:0 4px 14px -3px rgba(44,134,241,.55);
     animation:chMicBreathe 1.4s ease-in-out infinite;
   }
   .ch-bigmic.locked{ background:#9aa4ae; }
@@ -1187,16 +1227,14 @@
   }
   .ch-meter{
     display:none;
-    align-items:center; gap:4px; height:34px;
-    margin-inline-end:18px;
+    align-items:center; gap:4px; height:22px;
   }
   .chat.talking .ch-meter{ display:flex; }
-  .ch-meter i{ width:6px; height:8px; border-radius:3px; background:#2c86f1; display:block; transition:height .09s ease-out; }
+  .ch-meter i{ width:5px; height:7px; border-radius:2.5px; background:#2c86f1; display:block; transition:height .09s ease-out; }
   .ch-rec{
     display:none;
-    align-items:center; gap:8px;
-    margin-inline-end:18px;
-    font-size:14px; font-weight:700; color:#1b293b;
+    align-items:center; gap:6px;
+    font-size:13px; font-weight:700; color:#1b293b;
     font-variant-numeric: tabular-nums;
   }
   .chat.talking .ch-rec{ display:flex; }
@@ -1256,26 +1294,33 @@
 </head>
 <body>
 <div class="devbar" id="devbar">
-  <span class="lbl">מצבים</span>
-  <button type="button" data-state="idle">רגיל</button>
-  <button type="button" data-state="tx">משדר</button>
-  <button type="button" data-state="rx">מקבל שידור</button>
-  <button type="button" data-state="flow">שיחה מלאה</button>
-  <span class="lbl">מסכים</span>
-  <button type="button" data-state="settings">הגדרות</button>
-  <button type="button" data-state="chats">בחירת צ׳אט</button>
-  <button type="button" data-state="chatlist">מסך צ׳אטים</button>
-  <button type="button" data-state="chatopen">צ׳אט רגיל</button>
-  <button type="button" data-state="chatptt">צ׳אט עם PTT</button>
+  <span class="lbl" data-group="map">מפה</span>
+  <button type="button" data-state="idle" data-screen="map">רגיל</button>
+  <button type="button" data-state="tx" data-screen="map">משדר</button>
+  <button type="button" data-state="rx" data-screen="map">מקבל שידור</button>
+  <button type="button" data-state="flow" data-screen="map">שיחה מלאה</button>
+  <button type="button" data-state="micerr" data-screen="map">מיקרופון חסום</button>
+  <button type="button" data-state="alertdialog" data-screen="map">נכנס PTT</button>
+
+  <span class="lbl" data-group="chats">רשימת צ׳אטים</span>
+  <button type="button" data-state="chatlist" data-screen="chats">מסך צ׳אטים</button>
+  <button type="button" data-state="chatlistempty" data-screen="chats">מסך צ׳אטים - ריק</button>
+
+  <span class="lbl" data-group="chat">צ׳אט</span>
+  <button type="button" data-state="chatopen" data-screen="chat">צ׳אט רגיל</button>
+  <button type="button" data-state="chatptt" data-screen="chat">צ׳אט עם PTT</button>
+  <button type="button" data-state="pttrequest" data-screen="chat">בקשת PTT נכנסת</button>
+
+  <span class="lbl" data-group="settings">הגדרות PTT</span>
+  <button type="button" data-state="settings" data-screen="settings">הגדרות</button>
+  <button type="button" data-state="settingsempty" data-screen="settings">הגדרות - אין צ׳אטים</button>
+  <button type="button" data-state="chats" data-screen="settings">בחירת צ׳אט</button>
+  <button type="button" data-state="pttoff" data-screen="settings">PTT כבוי</button>
+
   <span class="lbl" style="display:none">סימון</span>
   <button type="button" class="tool" id="tPen" style="display:none">✏️ עיפרון</button>
   <button type="button" class="tool" id="tArrow" style="display:none">➜ חץ</button>
   <button type="button" id="tClear" style="display:none">🗑 נקה</button>
-  <span class="lbl">קצה</span>
-  <button type="button" data-state="pttoff">PTT כבוי</button>
-  <button type="button" data-state="micerr">מיקרופון חסום</button>
-  <button type="button" data-state="pttrequest">בקשת PTT נכנסת</button>
-  <button type="button" data-state="alertdialog">התרעת הקפצה</button>
 </div>
 <canvas id="markup"></canvas>
 <div class="phone">
@@ -1474,6 +1519,7 @@
             <span class="chat-time">עכשיו</span>
             <span class="chat-dot"></span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
         <button class="set-row pick" type="button" data-chat="קבוצה גדולה">
           <span class="radio"></span>
@@ -1484,6 +1530,7 @@
           <span class="chat-meta">
             <span class="chat-time">21/7/26</span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
         <button class="set-row pick" type="button" data-chat="הקפצה מותאמת (תרגול) - 17/7 16:22">
           <span class="radio"></span>
@@ -1497,6 +1544,7 @@
             <span class="chat-time">17/7/26</span>
             <span class="chat-badge">1</span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
         <button class="set-row pick" type="button" data-chat="אביר לילה ב׳ (תרגול) - 13/7 13:19">
           <span class="radio"></span>
@@ -1510,6 +1558,7 @@
             <span class="chat-time">13/7/26</span>
             <span class="chat-badge">1</span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
         <button class="set-row pick" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
           <span class="radio"></span>
@@ -1520,6 +1569,7 @@
           <span class="chat-meta">
             <span class="chat-time">7/7/26</span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
         <button class="set-row pick" type="button" data-chat="אביר לילה ב׳ (תרגול) - 5/7 20:52">
           <span class="radio"></span>
@@ -1533,6 +1583,7 @@
             <span class="chat-time">5/7/26</span>
             <span class="chat-badge">1</span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
         <button class="set-row pick" type="button" data-chat="זיהוי רחפן - חיישן קולי - הדרכות דניאל">
           <span class="radio"></span>
@@ -1543,9 +1594,17 @@
           <span class="chat-meta">
             <span class="chat-time">5/7/26</span>
           </span>
+        <span class="chat-open" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4ae" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
         </button>
       </div>
-      <p class="set-label" style="margin-top:-14px">ניתן לבחור צ׳אט אחד בלבד. כל שידור נשלח אליו.</p>
+
+      <div class="chatpicker-empty" id="chatListEmpty">
+        <span class="cpe-icon"><svg width="26" height="39" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#c7ccd2"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#c7ccd2"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#c7ccd2"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#c7ccd2"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#c7ccd2"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#c7ccd2"/></svg></span>
+        <p class="cpe-title">לא נמצאו התכתביות</p>
+        <button type="button" class="cpe-cta" id="cpeOpenChats">פתיחת צ׳אטים</button>
+      </div>
+
+      <p class="set-label chatpicker-hint" style="margin-top:-14px">ניתן לבחור צ׳אט אחד בלבד. כל שידור נשלח אליו.</p>
     </div>
   </div>
 
@@ -1685,6 +1744,10 @@
         </div>
       </div>
 
+      <div class="chats-empty" id="chatsEmpty">
+        <p>לא נמצאו התכתביות</p>
+      </div>
+
       <div class="chats-fade"></div>
       <button class="chats-fab" type="button" aria-label="חדש">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 6H12M6 0V12V0Z" stroke="white" stroke-width="2" stroke-miterlimit="10"/></svg>
@@ -1756,14 +1819,13 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v11H3z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.8 1.8 0 0 1-2.5-2.5l7.3-7.3"/></svg>
         </span>
-      </div>
-
-      <div class="ch-ptt-bar">
-        <span class="ch-live-info">
-          <span class="ch-rec" id="chRec"><i class="dot"></i><b id="chTimer">0:00</b></span>
-          <span class="ch-meter" id="chMeter"><i></i><i></i><i></i></span>
+        <span class="ci-ptt-wrap">
+          <span class="ch-live-info">
+            <span class="ch-rec" id="chRec"><i class="dot"></i><b id="chTimer">0:00</b></span>
+            <span class="ch-meter" id="chMeter"><i></i><i></i><i></i></span>
+          </span>
+          <button class="ch-bigmic" id="chBigMic" type="button" aria-label="שליחת PTT"><svg width="16" height="24" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#fff"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#fff"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#fff"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#fff"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#fff"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#fff"/></svg></button>
         </span>
-        <button class="ch-bigmic" id="chBigMic" type="button"><svg width="30" height="45" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#fff"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#fff"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#fff"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#fff"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#fff"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#fff"/></svg></button>
       </div>
 
       <div class="toast" id="chToast"></div>
@@ -2281,21 +2343,93 @@
     applyPtt();
   });
 
-  chatList.addEventListener('click', function (e) {
-    var row = e.target.closest('.set-row.pick');
-    if (!row) return;
+  function selectChatRow(row) {
     var rows = chatList.querySelectorAll('.set-row.pick');
     for (var i = 0; i < rows.length; i++) rows[i].classList.remove('sel');
     row.classList.add('sel');
     activeChat = row.getAttribute('data-chat');
+  }
+
+  // Paint the chat screen header from a settings-picker row (these rows are
+  // dispatch/PTT targets, not backed by a real .chat-card in the chats list).
+  function paintChatHeaderFromSettingsRow(row) {
+    var nameEl = document.querySelector('#chatScreen .ch-name');
+    var avWrap = document.querySelector('#chatScreen .ch-av');
+    nameEl.textContent = row.querySelector('.chat-title').textContent;
+    var av = row.querySelector('.chat-av');
+    var warn = av.classList.contains('warn');
+    var svg = av.querySelector('svg');
+    avWrap.innerHTML = '';
+    var s = document.createElement('span');
+    s.style.cssText = 'width:32px;height:32px;display:flex;align-items:center;justify-content:center;' +
+      'background:' + getComputedStyle(av).backgroundColor + ';' +
+      'border-radius:' + (av.classList.contains('round') ? '50%' : '9px') + ';';
+    if (svg) {
+      var clone = svg.cloneNode(true);
+      clone.setAttribute('width', '18');
+      clone.setAttribute('height', '18');
+      clone.setAttribute('stroke', warn ? '#333d47' : '#fff');
+      s.appendChild(clone);
+    }
+    avWrap.appendChild(s);
+    avWrap.classList.add('nodot');
+  }
+
+  // Opening straight from the picker also targets that chat for PTT — this
+  // list only exists to choose where PTT goes, so "open" and "select" agree.
+  function openChatFromSettings(row) {
+    selectChatRow(row);
+    paintChatHeaderFromSettingsRow(row);
+    openCard = null; // not backed by a real chat-card; header PTT toggle no-ops safely
+    settingsEl.classList.remove('open');
+    chatPttOn(pttEnabled);
+    openChat();
+  }
+
+  chatList.addEventListener('click', function (e) {
+    var row = e.target.closest('.set-row.pick');
+    if (!row) return;
+    if (e.target.closest('.chat-open')) { openChatFromSettings(row); return; }
+    selectChatRow(row);
+  });
+
+  document.getElementById('cpeOpenChats').addEventListener('click', function () {
+    settingsEl.classList.remove('open');
+    settingsEl.classList.remove('chat-empty');
+    openChats();
   });
 
   applyPtt();
 
   // ---- Prototype control panel ------------------------------------------
   var devbar = document.getElementById('devbar');
+
+  // Which screen is actually on top right now — settings and the open chat
+  // are overlays that sit above the chats list, which sits above the map.
+  function currentScreenKey() {
+    if (settingsEl.classList.contains('open')) return 'settings';
+    if (chatScreen.classList.contains('open')) return 'chat';
+    if (chatsScreen.classList.contains('open')) return 'chats';
+    return 'map';
+  }
+
+  // Only show the buttons relevant to whatever screen is actually showing —
+  // "global" ones (reset, overlays that can appear over anything) always show.
+  function refreshDevbarContext() {
+    var screen = currentScreenKey();
+    var buttons = devbar.querySelectorAll('button[data-screen]');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].style.display = (buttons[i].getAttribute('data-screen') === screen) ? '' : 'none';
+    }
+    var labels = devbar.querySelectorAll('.lbl[data-group]');
+    for (var j = 0; j < labels.length; j++) {
+      labels[j].style.display = (labels[j].getAttribute('data-group') === screen) ? '' : 'none';
+    }
+  }
+
   document.getElementById('devHotspot').addEventListener('click', function () {
     devbar.classList.toggle('open');
+    if (devbar.classList.contains('open')) refreshDevbarContext();
   });
 
   function devMark(state) {
@@ -2312,6 +2446,8 @@
     if (ptteLive) stopTalk();
     stopReceiving();
     settingsEl.classList.remove('open');
+    settingsEl.classList.remove('chat-empty');
+    chatsScreen.classList.remove('empty');
     closeChats();
     closeChat();
     if (typeof pttCard !== 'undefined' && pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
@@ -2331,12 +2467,20 @@
       setTimeout(function () { if (ptteLive) stopTalk(); }, 1600);
     },
     settings: function () { settingsEl.classList.add('open'); },
+    settingsempty: function () {
+      settingsEl.classList.add('open');
+      settingsEl.classList.add('chat-empty');
+    },
     chats: function () {
       settingsEl.classList.add('open');
       var list = document.getElementById('chatList');
       if (list && list.scrollIntoView) list.scrollIntoView({ block: 'start' });
     },
     chatlist: function () { openChats(); },
+    chatlistempty: function () {
+      openChats();
+      chatsScreen.classList.add('empty');
+    },
     pttoff: function () { pttEnabled = false; applyPtt(); },
     micerr: function () {
       micUnavailable('הגישה למיקרופון נחסמה — פתחו בדפדפן');
@@ -2350,7 +2494,7 @@
     devReset();
     devMark(state);
     // let this click's pointerup finish before entering a held state
-    setTimeout(function () { devStates[state](); }, 0);
+    setTimeout(function () { devStates[state](); refreshDevbarContext(); }, 0);
   });
 
   devMark('idle');
@@ -2792,6 +2936,13 @@
     var card = document.querySelectorAll('#chatsScreen .chat-card')[0];
     openCard = card; paintChatHeader(card); syncPttToChat(); openChat();
   };
+
+  // Keep the dev panel contextual even when the screen changes via real taps
+  // (settings gear, a chat card, back buttons) rather than a devbar button.
+  [settingsEl, chatScreen, chatsScreen].forEach(function (el) {
+    new MutationObserver(refreshDevbarContext).observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+  refreshDevbarContext();
 </script>
 </body>
 </html>
