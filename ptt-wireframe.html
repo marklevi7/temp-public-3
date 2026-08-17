@@ -1116,7 +1116,8 @@
     position:absolute; inset:0; left:0; top:0;
     width:24px; height:24px;
   }
-  .ch-msg .m-av::after{
+  /* only real people have an online status — no dot on group/event icons */
+  .ch-msg .m-av:not(.nodot)::after{
     content:""; position:absolute; left:0; bottom:0;
     width:8px;height:8px;border-radius:50%;
     background:#52cc52; border:1.5px solid #fff;
@@ -1156,6 +1157,10 @@
     flex-shrink:0;
   }
   .ci-mic svg{ stroke:#fff; }
+  /* PTT is the primary action once it's on for this chat — the regular
+     voice-message mic steps back to a quiet secondary button. */
+  .chat.ptt .ci-mic{ width:34px; height:34px; background:#f4f4f5; }
+  .chat.ptt .ci-mic svg{ width:19px; height:19px; stroke:#767f89; }
   .ci-field{
     flex:1; height:40px; border-radius:20px;
     background:#f4f4f5;
@@ -1814,11 +1819,6 @@
       </div>
 
       <div class="ch-input">
-        <button class="ci-mic" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></button>
-        <span class="ci-field">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v11H3z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.8 1.8 0 0 1-2.5-2.5l7.3-7.3"/></svg>
-        </span>
         <span class="ci-ptt-wrap">
           <span class="ch-live-info">
             <span class="ch-rec" id="chRec"><i class="dot"></i><b id="chTimer">0:00</b></span>
@@ -1826,6 +1826,11 @@
           </span>
           <button class="ch-bigmic" id="chBigMic" type="button" aria-label="שליחת PTT"><svg width="16" height="24" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#fff"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#fff"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#fff"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#fff"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#fff"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#fff"/></svg></button>
         </span>
+        <span class="ci-field">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v11H3z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round"><path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.8 1.8 0 0 1-2.5-2.5l7.3-7.3"/></svg>
+        </span>
+        <button class="ci-mic" type="button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></button>
       </div>
 
       <div class="toast" id="chToast"></div>
@@ -2353,6 +2358,7 @@
   // Paint the chat screen header from a settings-picker row (these rows are
   // dispatch/PTT targets, not backed by a real .chat-card in the chats list).
   function paintChatHeaderFromSettingsRow(row) {
+    clearDynamicChatMessages();
     var nameEl = document.querySelector('#chatScreen .ch-name');
     var avWrap = document.querySelector('#chatScreen .ch-av');
     nameEl.textContent = row.querySelector('.chat-title').textContent;
@@ -2662,7 +2668,7 @@
   // not the mic actually captured anything. The prototype's own voice.
   function addVoiceBubble() {
     var msg = document.createElement('div');
-    msg.className = 'ch-msg me';
+    msg.className = 'ch-msg me dyn';
     msg.innerHTML = '<div class="bubble mine"><div class="vb"><span class="play">' +
       '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 2.5 13 8l-9 5.5z"/></svg></span>' +
       '<span class="wave">' + chWaveBars(22) + '</span>' +
@@ -2677,10 +2683,12 @@
   }
 
   function sendChatReply() {
-    var avatarHtml = document.querySelector('#chatScreen .ch-av').innerHTML;
+    var avWrap = document.querySelector('#chatScreen .ch-av');
+    var avatarHtml = avWrap.innerHTML;
+    var nodot = avWrap.classList.contains('nodot');
     var msg = document.createElement('div');
-    msg.className = 'ch-msg';
-    msg.innerHTML = '<span class="m-av">' + avatarHtml + '</span>' +
+    msg.className = 'ch-msg dyn';
+    msg.innerHTML = '<span class="m-av' + (nodot ? ' nodot' : '') + '">' + avatarHtml + '</span>' +
       '<div class="bubble them"><div class="vb"><span class="play">' +
       '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 2.5 13 8l-9 5.5z"/></svg></span>' +
       '<span class="wave">' + chWaveBars(18) + '</span>' +
@@ -2743,7 +2751,16 @@
     return card.querySelector('.cc-name').textContent.trim();
   }
 
+  // A chat's identity is changing — drop any voice bubbles created by the
+  // PTT-send demo, since they carry a snapshot of whichever chat was open
+  // when they were sent and would otherwise show a stale, wrong avatar here.
+  function clearDynamicChatMessages() {
+    var olds = chBody.querySelectorAll('.ch-msg.dyn');
+    for (var i = 0; i < olds.length; i++) olds[i].remove();
+  }
+
   function paintChatHeader(card) {
+    clearDynamicChatMessages();
     var nameEl = document.querySelector('#chatScreen .ch-name');
     var avWrap = document.querySelector('#chatScreen .ch-av');
     nameEl.textContent = cardName(card);
