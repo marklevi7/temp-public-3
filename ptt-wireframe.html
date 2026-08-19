@@ -368,9 +368,15 @@
     pointer-events:none;
   }
   @keyframes orbitSpin{ to{ transform:rotate(360deg); } }
-  /* while transmitting the pulse ring says it, and a locked/off mic isn't a
-     live channel at all — the orbit only belongs to the idle, ready state */
-  .fab-mic.live .orbit,
+  /* transmitting: same orbit, red — you are on the air */
+  .fab-mic.live .orbit{
+    background:conic-gradient(
+      #f34545 0deg 52deg,    transparent 52deg 120deg,
+      #f34545 120deg 172deg, transparent 172deg 240deg,
+      #f34545 240deg 292deg, transparent 292deg 360deg
+    );
+  }
+  /* a locked or switched-off mic isn't a live channel at all */
   .fab-mic.locked .orbit,
   .fab-mic.off .orbit{ display:none; }
   .fab-mic.locked, .fab-mic.off{ box-shadow:0 8px 18px -6px rgba(0,0,0,.4); }
@@ -494,6 +500,9 @@
     font-size:13px; font-weight:700; color:var(--ink);
     white-space:nowrap;
   }
+  /* the name answers "where does this go?" — irrelevant once you're already
+     talking (meter) or listening (who's speaking), so it steps aside */
+  .talk-pill.active .pill-target{ display:none; }
   .talk-pill.rx .pill-target{ display:none; }
   .talk-pill.no-target .pill-target{ display:none; }
   /* nothing owns PTT — there is no channel, so there is no dock either
@@ -1276,7 +1285,13 @@
     animation:orbitSpin 2.6s linear infinite;
     pointer-events:none;
   }
-  .ch-bigmic.live .orbit,
+  .ch-bigmic.live .orbit{
+    background:conic-gradient(
+      #f34545 0deg 52deg,    transparent 52deg 120deg,
+      #f34545 120deg 172deg, transparent 172deg 240deg,
+      #f34545 240deg 292deg, transparent 292deg 360deg
+    );
+  }
   .ch-bigmic.locked .orbit{ display:none; }
   @media (prefers-reduced-motion: reduce){
     .ch-bigmic .orbit{ animation:none; }
