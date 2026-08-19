@@ -162,42 +162,65 @@
     cursor:pointer;
   }
 
-  /* Alert escalation dialog — Figma 6322:5122/5207, replicated exactly. */
+  /* Incoming PTT request — a toast that slides in above the map's own
+     controls, never a scrim. It must not block the map or the mic: the
+     request is an offer, not a modal decision. */
   .alert-scrim{
-    display:none;
-    position:absolute; inset:0;
-    background:rgba(0,0,0,.4);
-    z-index:45;
-    align-items:center; justify-content:center;
+    position:absolute;
+    left:12px; right:12px;
+    bottom:-260px;
+    z-index:44;
+    direction:rtl;
+    transition:bottom .32s cubic-bezier(.2,.8,.3,1), opacity .2s ease;
+    opacity:0;
+    pointer-events:none;
   }
-  .alert-scrim.show{ display:flex; }
+  /* offsets are from the phone frame, not the map — this clears the
+     highest map control (the settings FAB) with a gap above the stack */
+  .alert-scrim.show{ bottom:228px; opacity:1; pointer-events:auto; }
   .alert-dialog{
-    width:328px; max-width:calc(100% - 32px);
-    background:#fff; border-radius:20px;
-    padding:24px;
-    display:flex; flex-direction:column; gap:16px;
+    background:#fff; border-radius:16px;
+    padding:12px 14px;
+    display:flex; flex-direction:column; gap:10px;
     box-sizing:border-box;
-    box-shadow:0 20px 40px -10px rgba(0,0,0,.35);
+    box-shadow:0 14px 32px -10px rgba(0,0,0,.4);
   }
   .ad-head{ display:flex; align-items:center; justify-content:space-between; direction:rtl; gap:8px; }
-  .ad-close{ cursor:pointer; display:flex; padding:4px; flex-shrink:0; }
-  .ad-person{ display:flex; align-items:center; gap:10px; direction:rtl; }
+  .ad-close{ cursor:pointer; display:flex; padding:2px; flex-shrink:0; }
+  .ad-close svg{ width:20px; height:20px; }
+  .ad-person{ display:flex; align-items:center; gap:9px; direction:rtl; min-width:0; }
   .ad-avatar{
-    width:40px;height:40px;border-radius:50%;
+    width:32px;height:32px;border-radius:50%;
     background:#d1d4d8;
     display:flex; align-items:center; justify-content:center;
-    font-size:14px; font-weight:700; color:#1b293b;
+    font-size:12px; font-weight:700; color:#1b293b;
     flex-shrink:0; overflow:hidden;
   }
   .ad-avatar img{ width:100%;height:100%;object-fit:cover;display:block; }
-  .ad-name{ font-size:16px; font-weight:700; color:#1b293b; white-space:nowrap; }
-  .ad-body{ display:flex; flex-direction:column; gap:10px; text-align:right; direction:rtl; }
-  .ad-msg{ font-size:16px; line-height:20px; color:#1e1e1e; }
-  .ad-btn{
-    width:100%; height:40px;
-    background:#2d85f2; border:2px solid #2c86f1; border-radius:12px;
-    color:#fff; font-size:16px; font-weight:700;
+  .ad-name{ font-size:15px; font-weight:700; color:#1b293b; white-space:nowrap; }
+  .ad-body{ display:none; }
+  .ad-msg{ font-size:13px; line-height:17px; color:#6b7684; }
+
+  /* Two ways to answer: hear what they said, or hand the channel over. */
+  .ad-actions{ display:flex; align-items:center; gap:8px; }
+  .ad-play{
+    flex-shrink:0;
+    height:38px; padding:0 14px;
+    display:flex; align-items:center; gap:7px;
+    background:#eef1f4; border:none; border-radius:10px;
+    font-family:inherit; font-size:13.5px; font-weight:700; color:#1b293b;
     cursor:pointer;
+  }
+  .ad-play svg{ display:block; fill:#1b293b; }
+  .ad-play .ico-stop{ display:none; }
+  .ad-play.playing .ico-play{ display:none; }
+  .ad-play.playing .ico-stop{ display:block; }
+  .ad-btn{
+    flex:1; height:38px;
+    background:#2d85f2; border:none; border-radius:10px;
+    color:#fff; font-family:inherit; font-size:13.5px; font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
   }
   .status-badge svg{ fill:#fff; }
   .status-title{
@@ -1410,10 +1433,15 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </span>
         </div>
-        <div class="ad-body">
-          <div class="ad-msg">מבקש/ת להתחיל איתך שיחת PTT</div>
+        <div class="ad-msg">מבקש/ת להתחיל איתך שיחת PTT</div>
+        <div class="ad-actions">
+          <button type="button" class="ad-play" id="alertPlay">
+            <svg class="ico-play" width="13" height="13" viewBox="0 0 16 16"><path d="M4 2.5 13 8l-9 5.5z"/></svg>
+            <svg class="ico-stop" width="13" height="13" viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/></svg>
+            <span>האזנה</span>
+          </button>
+          <button type="button" class="ad-btn" id="alertCloseBtn">מעבר ל-PTT הזה</button>
         </div>
-        <button type="button" class="ad-btn" id="alertCloseBtn">התחל PTT עם יוסי ישראלי</button>
       </div>
     </div>
     <div class="header">
@@ -2927,17 +2955,55 @@
     pendingRequestCard = null;
   }
 
-  // ---- Alert escalation dialog (Figma 6322:5207) -------------------------
+  // ---- Incoming PTT request toast ----------------------------------------
+  // Two ways to answer without losing the map: hear what they said, or hand
+  // the channel over. Neither is forced — ignoring it is a valid outcome.
   var alertScrim = document.getElementById('alertScrim');
+  var alertPlayBtn = document.getElementById('alertPlay');
+  var alertClip = document.getElementById('chVoiceCC');
+
+  function stopAlertClip() {
+    alertPlayBtn.classList.remove('playing');
+    try { alertClip.pause(); alertClip.currentTime = 0; } catch (err) {}
+  }
+
   function showAlertDialog() {
     alertScrim.classList.add('show');
     playBlips(TONE_PTT_REQUEST);
     try { if (navigator.vibrate) navigator.vibrate([12, 40, 12]); } catch (err) {}
   }
-  function hideAlertDialog() { alertScrim.classList.remove('show'); }
+  function hideAlertDialog() {
+    alertScrim.classList.remove('show');
+    stopAlertClip();
+  }
+
+  alertPlayBtn.addEventListener('click', function () {
+    if (alertPlayBtn.classList.contains('playing')) { stopAlertClip(); return; }
+    alertPlayBtn.classList.add('playing');
+    try {
+      alertClip.currentTime = 0;
+      var pr = alertClip.play();
+      if (pr && pr.catch) pr.catch(stopAlertClip);
+    } catch (err) { stopAlertClip(); }
+  });
+  alertClip.addEventListener('ended', stopAlertClip);
+
   document.querySelector('.status-badge').addEventListener('click', showAlertDialog);
   document.getElementById('alertClose').addEventListener('click', hideAlertDialog);
-  document.getElementById('alertCloseBtn').addEventListener('click', hideAlertDialog);
+  // "switch to this PTT" actually moves the channel to the requester's chat,
+  // so the map dock and the mic immediately point at them.
+  document.getElementById('alertCloseBtn').addEventListener('click', function () {
+    var target = document.querySelectorAll('#chatsScreen .chat-card')[1]; // יוסי ישראלי
+    var previous = pttCard;
+    if (previous && previous !== target) previous.classList.remove('is-ptt');
+    pttCard = target;
+    pttCard.classList.add('is-ptt');
+    syncPttDockLabel();
+    if (openCard) chatPttOn(openCard === target);
+    playBlips(TONE_MODE_ON);
+    if (previous && previous !== target) showToast('PTT הועבר מ״' + cardName(previous) + '״');
+    hideAlertDialog();
+  });
 
   document.getElementById('prDecline').addEventListener('click', hidePttRequest);
   document.getElementById('prAccept').addEventListener('click', function () {
