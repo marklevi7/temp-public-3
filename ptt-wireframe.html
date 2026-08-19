@@ -432,8 +432,8 @@
     z-index:2;
   }
 
-  /* Two lines: the live dots/meter on top, the target chat's name under it.
-     flex-start is the RIGHT edge here — the dock sits in an RTL document. */
+  /* The target chat's name, with the level meter appearing above it only
+     while there's audio. flex-start is the RIGHT edge — this is RTL. */
   .pill-stack{
     display:flex;
     flex-direction:column;
@@ -443,14 +443,16 @@
     min-width:0;
   }
 
-  /* Three dots at rest; each stretches into a vertical rounded bar
-     while recording, driven by the live mic level. */
+  /* At rest the dock is just the chat name — the orbiting mic already says
+     the channel is armed. These three become the live level meter (JS drives
+     their heights) and only appear while transmitting or receiving. */
   .pill-dots{
-    display:flex;
+    display:none;
     align-items:center;
     gap:5px;
     height:20px;
   }
+  .talk-pill.active .pill-dots{ display:flex; }
   .pill-dots span{
     width:7px;
     height:7px;
@@ -494,6 +496,9 @@
   }
   .talk-pill.rx .pill-target{ display:none; }
   .talk-pill.no-target .pill-target{ display:none; }
+  /* nothing owns PTT — there is no channel, so there is no dock either
+     (an empty capsule would just read as a broken control) */
+  .talk-pill.no-target:not(.rx):not(.active){ display:none; }
 
   /* B2 — incoming: who is talking, in a darker "not you" treatment */
   .pill-speaker{
@@ -1249,17 +1254,40 @@
     position:relative;
     width:40px;height:40px;border-radius:50%;
     background:#2c86f1; border:none;
+    box-shadow:0 0 0 5px rgba(44,134,241,.15);
     display:flex;align-items:center;justify-content:center;
     touch-action:none; user-select:none; -webkit-user-select:none;
     transition:transform .15s ease, background .15s ease, box-shadow .15s ease;
   }
   .ch-bigmic svg{ stroke:none; }
+
+  /* Same armed-channel cue as the map mic, scaled down for the footer. */
+  .ch-bigmic .orbit{
+    position:absolute;
+    inset:-5px;
+    border-radius:50%;
+    background:conic-gradient(
+      #2c86f1 0deg 52deg,    transparent 52deg 120deg,
+      #2c86f1 120deg 172deg, transparent 172deg 240deg,
+      #2c86f1 240deg 292deg, transparent 292deg 360deg
+    );
+    -webkit-mask:radial-gradient(closest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
+    mask:radial-gradient(closest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
+    animation:orbitSpin 2.6s linear infinite;
+    pointer-events:none;
+  }
+  .ch-bigmic.live .orbit,
+  .ch-bigmic.locked .orbit{ display:none; }
+  @media (prefers-reduced-motion: reduce){
+    .ch-bigmic .orbit{ animation:none; }
+  }
+
   .ch-bigmic.live{
     transform:scale(1.08);
     box-shadow:0 4px 14px -3px rgba(44,134,241,.55);
     animation:chMicBreathe 1.4s ease-in-out infinite;
   }
-  .ch-bigmic.locked{ background:#9aa4ae; }
+  .ch-bigmic.locked{ background:#9aa4ae; box-shadow:none; }
   .ch-bigmic::before, .ch-bigmic::after{
     content:"";
     position:absolute; inset:0;
@@ -1883,7 +1911,7 @@
             <span class="ch-rec" id="chRec"><i class="dot"></i><b id="chTimer">0:00</b></span>
             <span class="ch-meter" id="chMeter"><i></i><i></i><i></i></span>
           </span>
-          <button class="ch-bigmic" id="chBigMic" type="button" aria-label="שליחת PTT"><svg width="16" height="24" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#fff"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#fff"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#fff"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#fff"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#fff"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#fff"/></svg></button>
+          <button class="ch-bigmic" id="chBigMic" type="button" aria-label="שליחת PTT"><span class="orbit" aria-hidden="true"></span><svg width="16" height="24" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="#fff"/><path d="M11.5936 5.86621C13.8483 5.8664 15.6414 7.72456 15.5926 9.9502L15.5819 10.167L14.8133 20.3584C14.6953 21.9231 13.3915 23.1327 11.8221 23.1328H6.67758C5.20644 23.1327 3.96774 22.0697 3.72152 20.6475L3.68637 20.3584L2.91781 10.167C2.74327 7.84663 4.57872 5.8665 6.90609 5.86621H11.5936ZM6.90609 7.86621C5.7428 7.86635 4.82476 8.85618 4.91195 10.0166L5.68051 20.208L5.69223 20.3047C5.77441 20.7786 6.18727 21.1328 6.67758 21.1328H11.8221C12.345 21.1327 12.7798 20.7297 12.8192 20.208L13.5877 10.0166L13.5926 9.80176C13.5597 8.73656 12.6843 7.86639 11.5936 7.86621H6.90609Z" fill="#fff"/><path d="M10.75 6V1C10.75 0.447715 11.1977 2.41412e-08 11.75 0C12.3023 -2.41412e-08 12.75 0.447715 12.75 1V6C12.75 6.55228 12.3023 7 11.75 7C11.1977 7 10.75 6.55228 10.75 6Z" fill="#fff"/><path d="M12 11.5C12.4142 11.5 12.75 11.8358 12.75 12.25C12.75 12.6642 12.4142 13 12 13H6.5C6.08579 13 5.75 12.6642 5.75 12.25C5.75 11.8358 6.08579 11.5 6.5 11.5H12Z" fill="#fff"/><path d="M11 9.5C11.4142 9.5 11.75 9.83579 11.75 10.25C11.75 10.6642 11.4142 11 11 11H7.5C7.08579 11 6.75 10.6642 6.75 10.25C6.75 9.83579 7.08579 9.5 7.5 9.5H11Z" fill="#fff"/><path d="M11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25C11.75 14.6642 11.4142 15 11 15H7.5C7.08579 15 6.75 14.6642 6.75 14.25C6.75 13.8358 7.08579 13.5 7.5 13.5H11Z" fill="#fff"/></svg></button>
         </span>
         <span class="ci-field">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v11H3z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
@@ -2514,7 +2542,12 @@
     chatsScreen.classList.remove('empty');
     closeChats();
     closeChat();
-    if (typeof pttCard !== 'undefined' && pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
+    // back to how the prototype ships: the widget's event chat owns PTT
+    if (typeof pttCard !== 'undefined') {
+      if (pttCard) pttCard.classList.remove('is-ptt');
+      pttCard = document.getElementById('widgetEventCard');
+      pttCard.classList.add('is-ptt');
+    }
     if (typeof syncPttDockLabel === 'function') syncPttDockLabel();
     chatPttOn(false);
     if (typeof hidePttRequest === 'function') hidePttRequest();
