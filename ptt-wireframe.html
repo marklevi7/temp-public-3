@@ -165,12 +165,13 @@
   /* Incoming PTT request — a toast that slides in above the map's own
      controls, never a scrim. It must not block the map or the mic: the
      request is an offer, not a modal decision. */
-  /* offsets are from the phone frame, not the map — this clears the
-     highest map control (the settings FAB) with a gap above the stack */
+  /* offsets are from the phone frame, not the map — it sits just above the
+     +/dock row and deliberately covers the settings FAB, which is the one
+     control you don't need while answering a request */
   .alert-scrim{
     position:absolute;
     left:12px; right:12px;
-    bottom:228px;
+    bottom:164px;
     z-index:44;
     direction:rtl;
     opacity:0;
@@ -486,6 +487,8 @@
     background:var(--accent);
     transition:height .06s linear;
   }
+  /* red = you are on the air, same as the orbit around the mic */
+  .talk-pill.active .pill-dots span{ background:#f34545; }
 
   /* Active: waveform */
   .bars{
