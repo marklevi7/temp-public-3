@@ -344,10 +344,38 @@
     right:20px;
     z-index:3;
     background:var(--accent);
-    transition:background .18s ease, transform .18s ease;
+    box-shadow:0 0 0 8px rgba(31,111,139,.16), 0 8px 18px -6px rgba(0,0,0,.4);
+    transition:background .18s ease, transform .18s ease, box-shadow .18s ease;
     touch-action:none;
     user-select:none;
     -webkit-user-select:none;
+  }
+
+  /* Ambient "channel is live" cue: three arc segments orbiting the mic.
+     One ring masked out of a conic-gradient — three arcs, three gaps. */
+  .fab-mic .orbit{
+    position:absolute;
+    inset:-7px;
+    border-radius:50%;
+    background:conic-gradient(
+      var(--accent) 0deg 52deg,   transparent 52deg 120deg,
+      var(--accent) 120deg 172deg, transparent 172deg 240deg,
+      var(--accent) 240deg 292deg, transparent 292deg 360deg
+    );
+    -webkit-mask:radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask:radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    animation:orbitSpin 2.6s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes orbitSpin{ to{ transform:rotate(360deg); } }
+  /* while transmitting the pulse ring says it, and a locked/off mic isn't a
+     live channel at all — the orbit only belongs to the idle, ready state */
+  .fab-mic.live .orbit,
+  .fab-mic.locked .orbit,
+  .fab-mic.off .orbit{ display:none; }
+  .fab-mic.locked, .fab-mic.off{ box-shadow:0 8px 18px -6px rgba(0,0,0,.4); }
+  @media (prefers-reduced-motion: reduce){
+    .fab-mic .orbit{ animation:none; }
   }
   .fab-mic svg{ stroke:#fff; color:#fff; transition:transform .18s ease; }
   #micIcon{ stroke:none; }
@@ -404,13 +432,24 @@
     z-index:2;
   }
 
+  /* Two lines: the live dots/meter on top, the target chat's name under it.
+     flex-start is the RIGHT edge here — the dock sits in an RTL document. */
+  .pill-stack{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:3px;
+    min-width:0;
+  }
+
   /* Three dots at rest; each stretches into a vertical rounded bar
      while recording, driven by the live mic level. */
   .pill-dots{
     display:flex;
     align-items:center;
     gap:5px;
-    height:34px;
+    height:20px;
   }
   .pill-dots span{
     width:7px;
@@ -441,6 +480,20 @@
     0%,100%{ transform:scaleY(.4); }
     50%{ transform:scaleY(1); }
   }
+
+  /* D4 — never ambiguous: which chat the mic actually sends to, at rest
+     and while transmitting. Hidden while receiving (that shows who's
+     talking instead) or when no chat currently owns PTT. */
+  .pill-target{
+    display:flex; align-items:center;
+    flex-shrink:0;
+  }
+  .pill-target-name{
+    font-size:13px; font-weight:700; color:var(--ink);
+    white-space:nowrap;
+  }
+  .talk-pill.rx .pill-target{ display:none; }
+  .talk-pill.no-target .pill-target{ display:none; }
 
   /* B2 — incoming: who is talking, in a darker "not you" treatment */
   .pill-speaker{
@@ -1386,7 +1439,7 @@
           <span class="status-badge">
             <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10v4a1 1 0 0 0 1 1h2.2l8.8 4.2V5.8L6.7 10H4.5a1 1 0 0 0-1 0z"/><path d="M18.4 9.4a3.6 3.6 0 0 1 0 5.2"/><path d="M6.9 15.2 8 20"/></svg>
           </span>
-          <span class="status-title">הקפצת תרגיל</span>
+          <span class="status-title">אביר לילה ג׳</span>
           <span class="status-flag">תרגול</span>
           <span class="spacer"></span>
           <span class="ico" id="statusChatBtn" style="cursor:pointer;">
@@ -1397,7 +1450,7 @@
           </span>
         </div>
 
-        <div class="status-sub">רמת גן • אביר לילה ב׳ • 22:03</div>
+        <div class="status-sub">רמת גן</div>
 
         <div class="status-row2">
           <span class="ico">
@@ -1460,7 +1513,12 @@
       <div class="mic-note" id="micNote"></div>
 
       <div class="talk-pill" id="pill">
-        <span class="pill-dots"><span></span><span></span><span></span></span>
+        <span class="pill-stack">
+          <span class="pill-dots"><span></span><span></span><span></span></span>
+          <span class="pill-target" id="pillTarget">
+            <span class="pill-target-name" id="pillTargetName"></span>
+          </span>
+        </span>
         <span class="pill-speaker">
           <span class="spk-avatar" id="spkAv"><img class="face" id="spkFace" alt="" src="data:image/jpeg;base64,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"><span class="initials" id="spkInit" style="display:none">ער</span></span>
           <span class="spk-name" id="spkName">מל דוד</span>
@@ -1473,6 +1531,7 @@
       </button>
 
       <button class="fab fab-mic" id="micBtn" type="button" aria-label="החזק כדי לדבר" aria-pressed="false">
+        <span class="orbit" aria-hidden="true"></span>
         <span class="ring"></span>
         <svg id="micIcon" width="17" height="26" viewBox="0 0 16 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4.16309 8.25V13.3906H1.75C0.783551 13.3906 7.87233e-05 12.6071 0 11.6406V10C0 9.0335 0.783502 8.25 1.75 8.25H4.16309ZM1.5 11.6406C1.50008 11.7786 1.61198 11.8906 1.75 11.8906H2.66309V9.75H1.75C1.61193 9.75 1.5 9.86193 1.5 10V11.6406Z" fill="currentColor"/>
@@ -1635,7 +1694,7 @@
       </div>
 
       <div class="chats-scroll">
-        <div class="chat-card is-ptt" id="widgetEventCard">
+        <div class="chat-card is-ptt" id="widgetEventCard" data-ptt-label="אביר לילה ג׳ - רמת גן">
           <div class="cc-wrap">
             <span class="cc-avatar"><span class="ev"><svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 1V3H2C0.895431 3 0 3.89543 0 5V19C0 20.1046 0.895431 21 2 21H18C19.1046 21 20 20.1046 20 19V9V7V5C20 3.89543 19.1046 3 18 3H17V1C17 0.447715 16.5523 0 16 0C15.4477 0 15 0.447715 15 1V3H5V1C5 0.447715 4.55228 0 4 0C3.44772 0 3 0.447715 3 1ZM16 5H4H2V7H18V5H16ZM2 9V19H18V9H2ZM4 12C4 11.4477 4.44772 11 5 11H15C15.5523 11 16 11.4477 16 12C16 12.5523 15.5523 13 15 13H5C4.44772 13 4 12.5523 4 12ZM5 15C4.44772 15 4 15.4477 4 16C4 16.5523 4.44772 17 5 17H8C8.55229 17 9 16.5523 9 16C9 15.4477 8.55229 15 8 15H5Z" fill="#1B293B"/></svg></span></span>
             <div class="cc-text">
@@ -2456,6 +2515,7 @@
     closeChats();
     closeChat();
     if (typeof pttCard !== 'undefined' && pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; }
+    if (typeof syncPttDockLabel === 'function') syncPttDockLabel();
     chatPttOn(false);
     if (typeof hidePttRequest === 'function') hidePttRequest();
     if (typeof hideAlertDialog === 'function') hideAlertDialog();
@@ -2750,6 +2810,22 @@
     return card.querySelector('.cc-name').textContent.trim();
   }
 
+  // D4 — the map dock always names whichever chat the mic will send to,
+  // so transmitting from outside the chat is never ambiguous.
+  function syncPttDockLabel() {
+    var nameEl = document.getElementById('pillTargetName');
+    if (pttCard) {
+      // events carry a short dispatch label ("<designation> - <settlement>");
+      // everything else just uses the chat's own name.
+      nameEl.textContent = pttCard.getAttribute('data-ptt-label') || cardName(pttCard);
+      pill.classList.remove('no-target');
+    } else {
+      nameEl.textContent = '';
+      pill.classList.add('no-target');
+    }
+  }
+  syncPttDockLabel();
+
   // A chat's identity is changing — drop any voice bubbles created by the
   // PTT-send demo, since they carry a snapshot of whichever chat was open
   // when they were sent and would otherwise show a stale, wrong avatar here.
@@ -2869,6 +2945,7 @@
     if (previous) previous.classList.remove('is-ptt');
     pttCard = incoming;
     pttCard.classList.add('is-ptt');
+    syncPttDockLabel();
     if (openCard === incoming) chatPttOn(true);
     else if (openCard) chatPttOn(false);
     playBlips(TONE_MODE_ON);
@@ -2892,6 +2969,7 @@
     if (pttCard === openCard) {          // turning it off here
       pttCard.classList.remove('is-ptt');
       pttCard = null;
+      syncPttDockLabel();
       chatPttOn(false);
       playBlips(TONE_MODE_OFF);
       return;
@@ -2900,13 +2978,14 @@
     if (previous) previous.classList.remove('is-ptt');
     pttCard = openCard;
     pttCard.classList.add('is-ptt');
+    syncPttDockLabel();
     chatPttOn(true);
     playBlips(TONE_MODE_ON);
     if (previous) showToast('PTT הועבר מ״' + cardName(previous) + '״');
   }, true);
 
   document.getElementById('chBx').addEventListener('click', function () {
-    if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; playBlips(TONE_MODE_OFF); }
+    if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; syncPttDockLabel(); playBlips(TONE_MODE_OFF); }
   }, true);
 
   // switching PTT off in settings clears the owning chat too
@@ -2914,6 +2993,7 @@
     if (!pttEnabled && pttCard) {
       pttCard.classList.remove('is-ptt');
       pttCard = null;
+      syncPttDockLabel();
       chatPttOn(false);
       playBlips(TONE_MODE_OFF);
     }
