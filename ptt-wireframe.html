@@ -933,7 +933,8 @@
 
   /* mic disabled when PTT is switched off */
   .fab-mic.off{ background:var(--lock); cursor:not-allowed; }
-  .talk-pill.off{ opacity:.45; }
+  /* PTT switched off: there is no channel, so there is no dock */
+  .talk-pill.off{ display:none; }
 
 
   /* ---- Prototype control panel (not part of the product) --------------- */
@@ -2611,7 +2612,12 @@
       openChats();
       chatsScreen.classList.add('empty');
     },
-    pttoff: function () { pttEnabled = false; applyPtt(); },
+    pttoff: function () {
+      pttEnabled = false;
+      applyPtt();
+      // mirror the real settings toggle: switching PTT off releases the chat
+      if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; syncPttDockLabel(); chatPttOn(false); }
+    },
     micerr: function () {
       micUnavailable('הגישה למיקרופון נחסמה — פתחו בדפדפן');
     }
