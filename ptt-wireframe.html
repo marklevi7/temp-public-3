@@ -14,6 +14,7 @@
     --card:#ffffff;
     --muted:#6b7684;
     --accent:#1f6f8b;
+    --blue700:#1a5fc4;   /* DS blue/700 — PTT mic, its orbit, settings FAB */
     --accent-soft:#d8ebf1;
     --danger:#c0453a;
     --danger-soft:#f6dcd8;
@@ -366,18 +367,19 @@
     width:48px;height:48px;
     border-radius:50%;
     border:none;
-    background:var(--accent);
+    background:var(--blue700);
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 8px 18px -6px rgba(0,0,0,.35);
     z-index:3;
   }
-  .settings-fab svg{ stroke:#fff; }
+  /* DS "tune" glyph (6869:7154) — filled, so it takes colour not stroke */
+  .settings-fab svg{ stroke:none; color:#fff; }
 
   .fab-mic{
     right:20px;
     z-index:3;
-    background:var(--accent);
-    box-shadow:0 0 0 8px rgba(31,111,139,.16), 0 8px 18px -6px rgba(0,0,0,.4);
+    background:var(--blue700);
+    box-shadow:0 0 0 8px rgba(26,95,196,.16), 0 8px 18px -6px rgba(0,0,0,.4);
     transition:background .18s ease, transform .18s ease, box-shadow .18s ease;
     touch-action:none;
     user-select:none;
@@ -391,9 +393,9 @@
     inset:-7px;
     border-radius:50%;
     background:conic-gradient(
-      var(--accent) 0deg 52deg,   transparent 52deg 120deg,
-      var(--accent) 120deg 172deg, transparent 172deg 240deg,
-      var(--accent) 240deg 292deg, transparent 292deg 360deg
+      var(--blue700) 0deg 52deg,   transparent 52deg 120deg,
+      var(--blue700) 120deg 172deg, transparent 172deg 240deg,
+      var(--blue700) 240deg 292deg, transparent 292deg 360deg
     );
     -webkit-mask:radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
     mask:radial-gradient(closest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
@@ -1411,8 +1413,8 @@
   .ch-bigmic{
     position:relative;
     width:40px;height:40px;border-radius:50%;
-    background:#2c86f1; border:none;
-    box-shadow:0 0 0 5px rgba(44,134,241,.15);
+    background:var(--blue700); border:none;
+    box-shadow:0 0 0 5px rgba(26,95,196,.15);
     display:flex;align-items:center;justify-content:center;
     touch-action:none; user-select:none; -webkit-user-select:none;
     transition:transform .15s ease, background .15s ease, box-shadow .15s ease;
@@ -1425,9 +1427,9 @@
     inset:-5px;
     border-radius:50%;
     background:conic-gradient(
-      #2c86f1 0deg 52deg,    transparent 52deg 120deg,
-      #2c86f1 120deg 172deg, transparent 172deg 240deg,
-      #2c86f1 240deg 292deg, transparent 292deg 360deg
+      var(--blue700) 0deg 52deg,    transparent 52deg 120deg,
+      var(--blue700) 120deg 172deg, transparent 172deg 240deg,
+      var(--blue700) 240deg 292deg, transparent 292deg 360deg
     );
     -webkit-mask:radial-gradient(closest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
     mask:radial-gradient(closest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
@@ -1659,10 +1661,7 @@
       </div>
 
       <button class="settings-fab" aria-label="הגדרות">
-        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3.1"/>
-          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.7 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6h.06A1.7 1.7 0 0 0 10.1 3.04V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.06a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/>
-        </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.0476 21.1852C11.7404 21.1852 11.481 21.0808 11.2693 20.8719C11.0578 20.6631 10.9521 20.4044 10.9521 20.0957V16.0897C10.9521 15.7809 11.0578 15.522 11.2693 15.3132C11.481 15.1044 11.7404 14.9999 12.0476 14.9999C12.3549 14.9999 12.6133 15.1044 12.8228 15.3132C13.0325 15.522 13.1373 15.7809 13.1373 16.0897V16.9999H20.0476C20.3564 16.9999 20.6152 17.1044 20.8241 17.3132C21.0329 17.522 21.1373 17.7809 21.1373 18.0897C21.1373 18.3969 21.0329 18.6563 20.8241 18.8679C20.6152 19.0794 20.3564 19.1852 20.0476 19.1852H13.1373V20.0957C13.1373 20.4044 13.0329 20.6631 12.8241 20.8719C12.6152 21.0808 12.3564 21.1852 12.0476 21.1852ZM3.95205 19.1852C3.64322 19.1852 3.38439 19.0794 3.17555 18.8679C2.96672 18.6563 2.8623 18.3969 2.8623 18.0897C2.8623 17.7824 2.96672 17.5239 3.17555 17.3144C3.38439 17.1048 3.64322 16.9999 3.95205 16.9999H7.95805C8.26672 16.9999 8.52547 17.1044 8.7343 17.3132C8.94314 17.522 9.04755 17.7809 9.04755 18.0897C9.04755 18.3969 8.94314 18.6563 8.7343 18.8679C8.52547 19.0794 8.26672 19.1852 7.95805 19.1852H3.95205ZM7.95805 15.0897C7.65072 15.0897 7.39131 14.9839 7.17981 14.7722C6.96814 14.5607 6.8623 14.3013 6.8623 13.9939V13.0897H3.95205C3.64322 13.0897 3.38439 12.9853 3.17555 12.7764C2.96672 12.5674 2.8623 12.3086 2.8623 11.9999C2.8623 11.6913 2.96672 11.4324 3.17555 11.2234C3.38439 11.0146 3.64322 10.9102 3.95205 10.9102H6.8623V9.99995C6.8623 9.69128 6.96814 9.43245 7.17981 9.22345C7.39131 9.01461 7.65072 8.9102 7.95805 8.9102C8.26522 8.9102 8.52364 9.01461 8.7333 9.22345C8.9428 9.43245 9.04755 9.69128 9.04755 9.99995V13.9999C9.04755 14.3086 8.94314 14.5674 8.7343 14.7764C8.52547 14.9853 8.26672 15.0897 7.95805 15.0897ZM12.0416 13.0897C11.7329 13.0897 11.4741 12.9853 11.2653 12.7764C11.0565 12.5674 10.9521 12.3086 10.9521 11.9999C10.9521 11.6913 11.0565 11.4324 11.2653 11.2234C11.4741 11.0146 11.7329 10.9102 12.0416 10.9102H20.0476C20.3564 10.9102 20.6152 11.0146 20.8241 11.2234C21.0329 11.4324 21.1373 11.6913 21.1373 11.9999C21.1373 12.3086 21.0329 12.5674 20.8241 12.7764C20.6152 12.9853 20.3564 13.0897 20.0476 13.0897H12.0416ZM16.0476 8.99995C15.7404 8.99995 15.481 8.89553 15.2693 8.6867C15.0578 8.47786 14.9521 8.21903 14.9521 7.9102V3.9042C14.9521 3.59553 15.0578 3.33678 15.2693 3.12795C15.481 2.91911 15.7404 2.8147 16.0476 2.8147C16.3549 2.8147 16.6133 2.91911 16.8228 3.12795C17.0325 3.33678 17.1373 3.59553 17.1373 3.9042V4.8147H20.0476C20.3564 4.8147 20.6152 4.91911 20.8241 5.12795C21.0329 5.33678 21.1373 5.59553 21.1373 5.9042C21.1373 6.21153 21.0329 6.47095 20.8241 6.68245C20.6152 6.89411 20.3564 6.99995 20.0476 6.99995H17.1373V7.9102C17.1373 8.21903 17.0329 8.47786 16.8241 8.6867C16.6152 8.89553 16.3564 8.99995 16.0476 8.99995ZM3.95205 6.99995C3.64322 6.99995 3.38439 6.89411 3.17555 6.68245C2.96672 6.47095 2.8623 6.21153 2.8623 5.9042C2.8623 5.59703 2.96672 5.33861 3.17555 5.12895C3.38439 4.91945 3.64322 4.8147 3.95205 4.8147H11.9581C12.2667 4.8147 12.5255 4.91911 12.7343 5.12795C12.9431 5.33678 13.0476 5.59553 13.0476 5.9042C13.0476 6.21153 12.9431 6.47095 12.7343 6.68245C12.5255 6.89411 12.2667 6.99995 11.9581 6.99995H3.95205Z" fill="currentColor"/></svg>
       </button>
 
       <div class="talker-marker m1">
