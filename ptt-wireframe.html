@@ -1160,14 +1160,17 @@
 
   /* PTT silenced: both walkie glyphs pick up a slash, and the banner
      switches from "mode on" to when the silence expires */
-  .ico-muted{ display:none; }
-  .ch-ptt .ico-muted{ --cut:#fff; }
-  .ch-ptt.on .ico-muted{ --cut:#2c86f1; }
-  .ch-banner .bico .ico-muted{ --cut:#1565c0; }
-  .chat.ptt-muted .ch-ptt > svg:not(.ico-muted),
-  .chat.ptt-muted .bico > svg:not(.ico-muted){ display:none; }
-  .chat.ptt-muted .ch-ptt .ico-muted,
-  .chat.ptt-muted .bico .ico-muted{ display:block; }
+  /* exactly one glyph shows at a time. These need to outrank
+     `.ch-acts svg{display:block}`, hence the element-qualified selectors. */
+  .ch-ptt svg.ico-muted,
+  .bico svg.ico-muted{ display:none; }
+  .chat.ptt-muted .ch-ptt svg:not(.ico-muted),
+  .chat.ptt-muted .bico svg:not(.ico-muted){ display:none; }
+  .chat.ptt-muted .ch-ptt svg.ico-muted,
+  .chat.ptt-muted .bico svg.ico-muted{ display:block; }
+  .ch-ptt svg.ico-muted{ --cut:#fff; }
+  .ch-ptt.on svg.ico-muted{ --cut:#2c86f1; }
+  .bico svg.ico-muted{ --cut:#1565c0; }
 
   /* Bottom sheet — geometry from the DS example (3139:6855):
      360 wide, top corners 20, pad 8/0/24/0, gap 16, handle 120x3,
