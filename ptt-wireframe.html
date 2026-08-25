@@ -1231,60 +1231,62 @@
     cursor:pointer;
   }
 
-  /* Confirm dialog — DS "small dialog" (1199:625), the close-an-event modal.
-     300 wide, r8, vertical stack gap 8, shadow 0 4 7 #0000002E. Header and
-     footer are both 40/48 rows padded 8/24/8/8: X on the left, title right;
-     destructive primary then a plain tertiary in the footer. */
+  /* Confirm dialog — modelled on 6899:239926 in the product file.
+     328 wide, r20, pad 24, vertical gap 16; the DS frame then nests the
+     body and buttons with a gap of 24, which is the extra 8 on .dlg-foot. */
   .dlg-scrim{
     position:absolute; inset:0; z-index:60;
     display:none;
     background:rgba(0,0,0,.6);
     align-items:center; justify-content:center;
-    padding:0 20px;
+    padding:0 16px;
   }
   .dlg-scrim.open{ display:flex; }
   .dlg{
     direction:rtl;
-    width:300px; max-width:100%;
-    background:#fff; border-radius:8px;
-    display:flex; flex-direction:column; gap:8px;
-    box-shadow:0 4px 7px rgba(0,0,0,.18);
-    overflow:hidden;
+    width:328px; max-width:100%;
+    background:#fff; border-radius:20px;
+    padding:24px;
+    display:flex; flex-direction:column; gap:16px;
   }
   .dlg-head{
     display:flex; align-items:center; justify-content:space-between;
-    height:40px; padding:8px 24px 8px 8px;
-    border-bottom:1px solid #f4f4f5;
-    flex-shrink:0;
+    gap:10px; min-height:24px;
   }
-  .dlg-title{ font-size:16px; font-weight:600; line-height:20px; color:#767f89; }
+  .dlg-title{
+    display:flex; align-items:center; gap:4px;
+    font-size:16px; font-weight:600; line-height:20px; color:#1b293b;
+    min-width:0;
+  }
+  .dlg-title .dot{ color:#a4a9b1; }
+  .dlg-title .who{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dlg-x{
     width:24px;height:24px; padding:0; border:none; background:none;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; flex-shrink:0;
   }
-  .dlg-x svg{ stroke:#767f89; display:block; }
+  .dlg-x svg{ stroke:#0c2231; display:block; }
+  /* fixed-height block in the DS frame — the copy sits at the top of it */
   .dlg-body{
-    padding:16px;
+    min-height:90px;
     font-size:16px; font-weight:400; line-height:20px; color:#1b293b;
     text-align:right;
   }
-  .dlg-body b{ font-weight:700; }
-  .dlg-foot{
-    display:flex; align-items:center;
-    height:48px; padding:8px 24px 8px 8px;
-    flex-shrink:0;
-  }
-  /* buttons sit together on the left, mirroring the DS frame */
-  .dlg-acts{ display:flex; align-items:center; gap:16px; padding:0 16px; }
+  .dlg-foot{ display:flex; gap:16px; margin-top:8px; }
+  /* Mobile button primary L / secondary L — 40 tall, r12, Assistant Bold 16 */
   .dlg-btn{
-    height:32px; padding:6px 8px;
-    border:none; border-radius:8px;
-    font-family:inherit; font-size:16px; line-height:20px;
+    /* Basis is the exact half rather than 0: with flex-basis:0 the outlined
+       button's 2px border inflates its hypothetical size, and the row splits
+       130/134 instead of 132/132. */
+    flex:1 1 calc(50% - 8px); min-width:0;
+    height:40px; padding:0 16px;
+    border-radius:12px; border:none;
+    font-family:inherit; font-size:16px; font-weight:700; line-height:20px;
+    display:flex; align-items:center; justify-content:center;
     cursor:pointer; white-space:nowrap;
   }
-  .dlg-btn.danger{ background:#db2626; color:#fff; font-weight:700; }
-  .dlg-btn.plain{ background:none; color:#1b293b; font-weight:400; }
+  .dlg-btn.danger{ background:#db2626; color:#fff; }
+  .dlg-btn.ghost{ background:none; border:2px solid #2c86f1; color:#2c86f1; }
   .sheet-opt:active{ background:#dbeafe; }
   @media (prefers-reduced-motion: reduce){
     .sheet{ transition:none; }
@@ -2149,17 +2151,15 @@
       <div class="dlg-scrim" id="closePttScrim">
         <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="closePttTitle">
           <div class="dlg-head">
-            <span class="dlg-title" id="closePttTitle">סגירת PTT</span>
+            <span class="dlg-title" id="closePttTitle">PTT<span class="dot">•</span><span class="who" id="closePttWho"></span></span>
             <button type="button" class="dlg-x" id="closePttX" aria-label="סגירה">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M8 8l8 8M16 8l-8 8"/></svg>
             </button>
           </div>
-          <div class="dlg-body">לסגור את צ׳אט ה-PTT עבור <b id="closePttCount">5 אנשים</b>?</div>
+          <div class="dlg-body">האם לסגור את ה-PTT עבור <span id="closePttCount">5 אנשים</span>?</div>
           <div class="dlg-foot">
-            <span class="dlg-acts">
-              <button type="button" class="dlg-btn danger" id="closePttYes">סגור</button>
-              <button type="button" class="dlg-btn plain" id="closePttNo">אל תסגור</button>
-            </span>
+            <button type="button" class="dlg-btn danger" id="closePttYes">סגור</button>
+            <button type="button" class="dlg-btn ghost" id="closePttNo">תשאיר פתוח</button>
           </div>
         </div>
       </div>
@@ -3385,6 +3385,8 @@
   var CLOSE_PTT_MEMBERS = 5;
   function openClosePttDialog() {
     document.getElementById('closePttCount').textContent = CLOSE_PTT_MEMBERS + ' אנשים';
+    document.getElementById('closePttWho').textContent =
+      document.querySelector('#chatScreen .ch-name').textContent.trim();
     closePttScrim.classList.add('open');
   }
   function closeClosePttDialog() { closePttScrim.classList.remove('open'); }
