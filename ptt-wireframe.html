@@ -412,9 +412,8 @@
     );
   }
   /* a locked or switched-off mic isn't a live channel at all */
-  .fab-mic.locked .orbit,
-  .fab-mic.off .orbit{ display:none; }
-  .fab-mic.locked, .fab-mic.off{ box-shadow:0 8px 18px -6px rgba(0,0,0,.4); }
+  .fab-mic.locked .orbit{ display:none; }
+  .fab-mic.locked{ box-shadow:0 8px 18px -6px rgba(0,0,0,.4); }
   @media (prefers-reduced-motion: reduce){
     .fab-mic .orbit{ animation:none; }
   }
@@ -826,27 +825,6 @@
   .set-row .name{ display:block; font-size:15px; font-weight:600; color:var(--ink); }
   .set-row .meta{ display:block; font-size:12px; color:var(--muted); margin-top:3px; }
 
-  /* toggle */
-  .switch{
-    width:50px;height:30px;border-radius:15px;
-    background:var(--line);
-    position:relative;
-    flex-shrink:0;
-    transition:background .18s ease;
-  }
-  .switch::after{
-    content:"";
-    position:absolute;
-    top:3px; right:3px;
-    width:24px;height:24px;border-radius:50%;
-    background:#fff;
-    box-shadow:0 1px 3px rgba(0,0,0,.3);
-    transition:transform .18s ease;
-  }
-  .set-row.on .switch{ background:var(--ok); }
-  .set-row.on .switch::after{ transform:translateX(-20px); }
-
-
   /* chat rows: icon + name + preview + time (+ unread) */
   .set-row.pick{ align-items:flex-start; gap:10px; padding:11px 14px; }
   .set-row.pick.sel{ background:#dbe9f8; }
@@ -903,7 +881,8 @@
     display:flex;align-items:center;justify-content:center;
   }
   .set-row.sel .name{ color:var(--accent); }
-  .settings.off .set-group.chatpicker{ opacity:.4; pointer-events:none; }
+  /* the hint is a second label directly under the section title */
+  .set-label + .chatpicker-hint{ font-weight:400; margin-top:-6px; }
 
   /* open a chat straight from the picker, without changing the PTT selection */
   .chat-open{
@@ -934,11 +913,6 @@
   .settings.chat-empty .set-group.chatpicker{ display:none; }
   .settings.chat-empty .chatpicker-empty{ display:flex; }
   .settings.chat-empty .chatpicker-hint{ display:none; }
-
-  /* mic disabled when PTT is switched off */
-  .fab-mic.off{ background:var(--lock); cursor:not-allowed; }
-  /* PTT switched off: there is no channel, so there is no dock */
-  .talk-pill.off{ display:none; }
 
 
   /* ---- Prototype control panel (not part of the product) --------------- */
@@ -1613,7 +1587,6 @@
   <button type="button" data-state="settings" data-screen="settings">הגדרות</button>
   <button type="button" data-state="settingsempty" data-screen="settings">הגדרות - אין צ׳אטים</button>
   <button type="button" data-state="chats" data-screen="settings">בחירת צ׳אט</button>
-  <button type="button" data-state="pttoff" data-screen="settings">PTT כבוי</button>
 
   <span class="lbl" style="display:none">סימון</span>
   <button type="button" class="tool" id="tPen" style="display:none">✏️ עיפרון</button>
@@ -1797,18 +1770,8 @@
     </div>
 
     <div class="set-body">
-      <p class="set-label">מצב</p>
-      <div class="set-group">
-        <button class="set-row on" id="pttToggle" type="button">
-          <span class="grow">
-            <span class="name">PTT פעיל</span>
-            <span class="meta" id="pttState">לחיצה ארוכה על המיקרופון משדרת</span>
-          </span>
-          <span class="switch"></span>
-        </button>
-      </div>
-
       <p class="set-label">שידור אל</p>
+      <p class="set-label chatpicker-hint">ניתן לבחור צ׳אט אחד בלבד. כל שידור נשלח אליו.</p>
       <div class="set-group chatpicker" id="chatList">
         <button class="set-row pick sel" type="button" data-chat="אביר לילה ג׳ (תרגול) - 29/7 17:05">
           <span class="radio"></span>
@@ -1907,7 +1870,6 @@
         <button type="button" class="cpe-cta" id="cpeOpenChats">פתיחת צ׳אטים</button>
       </div>
 
-      <p class="set-label chatpicker-hint" style="margin-top:-14px">ניתן לבחור צ׳אט אחד בלבד. כל שידור נשלח אליו.</p>
     </div>
   </div>
 
@@ -2550,7 +2512,6 @@
 
   function startTalk(e) {
     if (e) e.preventDefault();
-    if (!pttEnabled) return;
     // B2: you cannot transmit over someone who already holds the floor
     if (receiving) return;
     if (ptteLive) return;
@@ -2655,11 +2616,8 @@
   // ---- Settings ----------------------------------------------------------
   var settingsEl = document.getElementById('settings');
   var setBack = document.getElementById('setBack');
-  var pttToggle = document.getElementById('pttToggle');
-  var pttState = document.getElementById('pttState');
   var chatList = document.getElementById('chatList');
   var settingsFab = document.querySelector('.settings-fab');
-  var pttEnabled = true;
   var activeChat = 'אביר לילה ג׳ (תרגול) - 29/7 17:05';
 
   settingsFab.addEventListener('click', function () {
@@ -2667,22 +2625,6 @@
   });
   setBack.addEventListener('click', function () {
     settingsEl.classList.remove('open');
-  });
-
-  function applyPtt() {
-    pttToggle.classList.toggle('on', pttEnabled);
-    settingsEl.classList.toggle('off', !pttEnabled);
-    micBtn.classList.toggle('off', !pttEnabled);
-    pill.classList.toggle('off', !pttEnabled);
-    pttState.textContent = pttEnabled
-      ? 'לחיצה ארוכה על המיקרופון משדרת'
-      : 'המיקרופון ישלח הודעות קוליות רגילות לצ׳אט';
-  }
-
-  pttToggle.addEventListener('click', function () {
-    pttEnabled = !pttEnabled;
-    if (!pttEnabled && ptteLive) stopTalk();
-    applyPtt();
   });
 
   function selectChatRow(row) {
@@ -2725,7 +2667,7 @@
     paintChatHeaderFromSettingsRow(row);
     openCard = null; // not backed by a real chat-card; header PTT toggle no-ops safely
     settingsEl.classList.remove('open');
-    chatPttOn(pttEnabled);
+    chatPttOn(true);
     openChat();
   }
 
@@ -2741,8 +2683,6 @@
     settingsEl.classList.remove('chat-empty');
     openChats();
   });
-
-  applyPtt();
 
   // ---- Prototype control panel ------------------------------------------
   var devbar = document.getElementById('devbar');
@@ -2804,7 +2744,6 @@
     if (typeof hidePttRequest === 'function') hidePttRequest();
     if (typeof hideAlertDialog === 'function') hideAlertDialog();
     document.getElementById('micNote').classList.remove('show');
-    if (!pttEnabled) { pttEnabled = true; applyPtt(); }
   }
 
   var devStates = {
@@ -2829,12 +2768,6 @@
     chatlistempty: function () {
       openChats();
       chatsScreen.classList.add('empty');
-    },
-    pttoff: function () {
-      pttEnabled = false;
-      applyPtt();
-      // mirror the real settings toggle: switching PTT off releases the chat
-      if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; syncPttDockLabel(); chatPttOn(false); }
     },
     micerr: function () {
       micUnavailable('הגישה למיקרופון נחסמה — פתחו בדפדפן');
@@ -3129,11 +3062,6 @@
     chPtt.classList.toggle('on', on);
     if (!on && typeof clearPttMute === 'function') clearPttMute();
   }
-  // Only the disabled case lives here — the owner logic is further down,
-  // where PTT is moved between chats.
-  chPtt.addEventListener('click', function () {
-    if (!pttEnabled) { showToast('PTT כבוי בהגדרות'); }
-  });
   document.getElementById('chBx').addEventListener('click', openClosePttDialog);
   document.querySelector('#chatScreen .ch-back').addEventListener('click', closeChat);
   document.querySelectorAll('#chatsScreen .chat-card').forEach(function (c) {
@@ -3362,7 +3290,7 @@
 
   // the header toggle now moves PTT between chats
   chPtt.addEventListener('click', function () {
-    if (!pttEnabled || !openCard) return;
+    if (!openCard) return;
     if (pttCard === openCard) {          // turning it off here
       pttCard.classList.remove('is-ptt');
       pttCard = null;
@@ -3412,17 +3340,6 @@
     devStates.chatptt();
     setTimeout(openClosePttDialog, 0);
   };
-
-  // switching PTT off in settings clears the owning chat too
-  pttToggle.addEventListener('click', function () {
-    if (!pttEnabled && pttCard) {
-      pttCard.classList.remove('is-ptt');
-      pttCard = null;
-      syncPttDockLabel();
-      chatPttOn(false);
-      playBlips(TONE_MODE_OFF);
-    }
-  });
 
   devStates.chatptt = function () {
     openChats();
@@ -3496,16 +3413,8 @@
     e.stopPropagation();
     closeChatMenu();
     // No channel yet? There is nothing to silence — the row starts one instead.
-    if (!chatScreen.classList.contains('ptt')) {
-      // "start PTT here" is an explicit request for the channel, so if the
-      // global switch happens to be off we honour the newer, more specific
-      // ask and flip it back on. Dead-ending on "PTT כבוי בהגדרות" would just
-      // send you to settings to say yes a second time. Announced, not silent,
-      // since it changes a setting beyond the chat you asked about.
-      if (!pttEnabled) { pttEnabled = true; applyPtt(); showToast('PTT הופעל בהגדרות'); }
-      chPtt.click();   // the header toggle owns moving the channel between chats
-      return;
-    }
+    // the header toggle owns moving the channel between chats
+    if (!chatScreen.classList.contains('ptt')) { chPtt.click(); return; }
     // already silenced? the row is the way back on, no sheet needed
     if (chatScreen.classList.contains('ptt-muted')) { clearPttMute(); return; }
     openPttMute();
