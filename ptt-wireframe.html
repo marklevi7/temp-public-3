@@ -3495,10 +3495,17 @@
   document.getElementById('cmMutePtt').addEventListener('click', function (e) {
     e.stopPropagation();
     closeChatMenu();
-    // No channel yet? There is nothing to silence — the row starts one instead,
-    // deferring to the header toggle so the move-between-chats logic and the
-    // "PTT is off in settings" toast both stay in one place.
-    if (!chatScreen.classList.contains('ptt')) { chPtt.click(); return; }
+    // No channel yet? There is nothing to silence — the row starts one instead.
+    if (!chatScreen.classList.contains('ptt')) {
+      // "start PTT here" is an explicit request for the channel, so if the
+      // global switch happens to be off we honour the newer, more specific
+      // ask and flip it back on. Dead-ending on "PTT כבוי בהגדרות" would just
+      // send you to settings to say yes a second time. Announced, not silent,
+      // since it changes a setting beyond the chat you asked about.
+      if (!pttEnabled) { pttEnabled = true; applyPtt(); showToast('PTT הופעל בהגדרות'); }
+      chPtt.click();   // the header toggle owns moving the channel between chats
+      return;
+    }
     // already silenced? the row is the way back on, no sheet needed
     if (chatScreen.classList.contains('ptt-muted')) { clearPttMute(); return; }
     openPttMute();
