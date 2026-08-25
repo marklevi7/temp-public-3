@@ -1156,6 +1156,49 @@
   }
   .ch-name{ font-size:16px; font-weight:600; color:#1b293b; flex:1; }
   .ch-acts{ display:flex; align-items:center; gap:14px; }
+
+  /* Bottom sheet — geometry from the DS example (3139:6855):
+     360 wide, top corners 20, pad 8/0/24/0, gap 16, handle 120x3,
+     options are Button secondary M (200x32, r8, 2px #2c86f1). */
+  .sheet-scrim{
+    position:absolute; inset:0; z-index:50;
+    display:none;
+  }
+  .sheet-scrim.open{ display:block; }
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0;
+    direction:rtl;
+    background:#fff;
+    border-radius:20px 20px 0 0;
+    padding:8px 0 24px;
+    display:flex; flex-direction:column; gap:16px;
+    box-shadow:0 -2px 8px rgba(0,0,0,.25);
+    transform:translateY(100%);
+    transition:transform .28s cubic-bezier(.2,.8,.3,1);
+  }
+  .sheet-scrim.open .sheet{ transform:translateY(0); }
+  .sheet-handle{
+    width:120px; height:3px; margin:2px auto 3px;
+    background:#bbbfc4; border-radius:40px;
+  }
+  .sheet-head{ padding:0 24px; text-align:right; }
+  .sheet-title{ font-size:22px; font-weight:600; color:#1b293b; line-height:32px; }
+  .sheet-sub{ font-size:14px; font-weight:400; color:#767f89; line-height:20px; }
+  .sheet-opts{
+    display:flex; flex-direction:column; align-items:center; gap:24px;
+    padding:0 24px;
+  }
+  .sheet-opt{
+    width:200px; height:32px;
+    background:none; border:2px solid #2c86f1; border-radius:8px;
+    color:#2c86f1; font-family:inherit; font-size:14px; font-weight:400;
+    cursor:pointer;
+  }
+  .sheet-opt:active{ background:#dbeafe; }
+  @media (prefers-reduced-motion: reduce){
+    .sheet{ transition:none; }
+  }
+
   /* header kebab + its menu (menu spec from DS example 4246:221629) */
   .ch-more{
     width:24px; height:24px; flex-shrink:0;
@@ -1459,6 +1502,7 @@
   <button type="button" data-state="chatptt" data-screen="chat">צ׳אט עם PTT</button>
   <button type="button" data-state="chattx" data-screen="chat">משדר</button>
   <button type="button" data-state="chatmenu" data-screen="chat">תפריט צ׳אט</button>
+  <button type="button" data-state="pttmute" data-screen="chat">השתקת PTT</button>
   <button type="button" data-state="pttrequest" data-screen="chat">בקשת PTT נכנסת</button>
 
   <span class="lbl" data-group="settings">הגדרות PTT</span>
@@ -1952,7 +1996,7 @@
           <span class="ch-ptt" id="chPtt"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="currentColor"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="currentColor"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="currentColor"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="currentColor"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="currentColor"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="currentColor"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="currentColor"/></svg></span>
           <span class="ch-more" id="chMore" role="button" tabindex="0" aria-label="עוד"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 6C14 7.10457 13.1046 8 12 8C10.8954 8 10 7.10457 10 6C10 4.89543 10.8954 4 12 4C13.1046 4 14 4.89543 14 6Z" fill="#767F89"/><path d="M14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12Z" fill="#767F89"/><path d="M14 18C14 19.1046 13.1046 20 12 20C10.8954 20 10 19.1046 10 18C10 16.8954 10.8954 16 12 16C13.1046 16 14 16.8954 14 18Z" fill="#767F89"/></svg></span>
         <div class="chat-menu" id="chatMenu">
-          <button type="button" class="cm-item"><span class="cm-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="4" width="9" height="16" rx="2.4"/><path d="M13 4V2"/><path d="M9.5 8.5h4M9.5 11h4"/><path d="M3.5 3.5l17 17"/></svg></span><span class="cm-lbl">השתקת PTT…</span></button>
+          <button type="button" class="cm-item" id="cmMutePtt"><span class="cm-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="4" width="9" height="16" rx="2.4"/><path d="M13 4V2"/><path d="M9.5 8.5h4M9.5 11h4"/><path d="M3.5 3.5l17 17"/></svg></span><span class="cm-lbl">השתקת PTT…</span></button>
           <button type="button" class="cm-item"><span class="cm-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 11.5V10a5.5 5.5 0 0 0-7.4-5.15"/><path d="M6.5 10v1.5c0 2-.7 3-1.5 4h12"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/><path d="M3.5 3.5l17 17"/></svg></span><span class="cm-lbl">השתקת צ׳אט</span></button>
           <button type="button" class="cm-item"><span class="cm-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6-2.2.6-3.4 3.4.5 4.2-6.6-6.6-4.2-.5 3.4-3.4.6-2.2z"/><path d="M8.8 15.2L4 20"/></svg></span><span class="cm-lbl">נעיצת צ׳אט</span></button>
           <button type="button" class="cm-item danger"><span class="cm-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15"/><path d="M9.5 6.5V4.8c0-.7.6-1.3 1.3-1.3h2.4c.7 0 1.3.6 1.3 1.3v1.7"/><path d="M6.5 6.5l.9 12.1c.05.8.7 1.4 1.5 1.4h6.2c.8 0 1.45-.6 1.5-1.4l.9-12.1"/><path d="M10.5 10v6M13.5 10v6"/></svg></span><span class="cm-lbl">מחיקת צ׳אט</span></button>
@@ -1995,6 +2039,21 @@
         </span>
       </div>
 
+      <div class="sheet-scrim" id="pttMuteScrim">
+        <div class="sheet" id="pttMuteSheet" role="dialog" aria-label="השתקת PTT">
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <div class="sheet-title">השתקת PTT למשך…</div>
+            <div class="sheet-sub">שידורי ה-PTT בצ׳אט הזה יושתקו לפרק הזמן שתבחרו</div>
+          </div>
+          <div class="sheet-opts">
+            <button type="button" class="sheet-opt">שעה</button>
+            <button type="button" class="sheet-opt">שעתיים</button>
+            <button type="button" class="sheet-opt">4 שעות</button>
+            <button type="button" class="sheet-opt">24 שעות</button>
+          </div>
+        </div>
+      </div>
       <div class="toast" id="chToast"></div>
     </div>
 
@@ -2948,7 +3007,7 @@
     toastTimer = setTimeout(function () { chToast.classList.remove('show'); }, 2600);
   }
   function openChat() { chatScreen.classList.add('open'); }
-  function closeChat() { chatScreen.classList.remove('open'); var m=document.getElementById('chatMenu'); if(m) m.classList.remove('open'); }
+  function closeChat() { chatScreen.classList.remove('open'); var m=document.getElementById('chatMenu'); if(m) m.classList.remove('open'); var sh=document.getElementById('pttMuteScrim'); if(sh) sh.classList.remove('open'); }
   function chatPttOn(on) {
     chatScreen.classList.toggle('ptt', on);
     chPtt.classList.toggle('on', on);
@@ -3255,6 +3314,28 @@
   devStates.chatmenu = function () {
     devStates.chatptt();
     chatMenuEl.classList.add('open');
+  };
+
+
+  // ---- "silence PTT…" bottom sheet ---------------------------------------
+  var pttMuteScrim = document.getElementById('pttMuteScrim');
+  function openPttMute(){ pttMuteScrim.classList.add('open'); }
+  function closePttMute(){ pttMuteScrim.classList.remove('open'); }
+  document.getElementById('cmMutePtt').addEventListener('click', function (e) {
+    e.stopPropagation();
+    closeChatMenu();
+    openPttMute();
+  });
+  // tapping off the sheet dismisses it; picking a duration confirms and closes
+  pttMuteScrim.addEventListener('click', function (e) {
+    if (!e.target.closest('.sheet')) { closePttMute(); return; }
+    var opt = e.target.closest('.sheet-opt');
+    if (opt) { closePttMute(); showToast('PTT מושתק ל' + opt.textContent.trim()); }
+  });
+
+  devStates.pttmute = function () {
+    devStates.chatptt();
+    openPttMute();
   };
 
   devStates.chattx = function () {
