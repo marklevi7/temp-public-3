@@ -1174,26 +1174,16 @@
 
   /* Silenced is an off state, not a blue one: every blue surface the walkie
      glyph sits on drops to Gray Dark, and the mic's orbit stops spinning —
-     nothing is listening, so nothing should look live. `.live`/`.locked` are
-     excluded so transmitting still reads red and a taken channel still reads
-     locked. */
+     nothing is listening, so nothing should look live. `.live` is excluded so
+     transmitting still reads red. */
   .chat.ptt-muted .ch-ptt.on{ background:var(--gray-dark); }
   .chat.ptt-muted .ch-ptt.on svg.ico-muted{ --cut:var(--gray-dark); }
   .chat.ptt-muted .ch-banner{ background:var(--gray-dark); }
   .chat.ptt-muted .ch-banner .bico{ background:var(--text-secondary); }
   .chat.ptt-muted .ch-banner .bico svg.ico-muted{ --cut:var(--text-secondary); }
-  .chat.ptt-muted .ch-bigmic:not(.live):not(.locked){
-    background:var(--gray-dark);
-    box-shadow:0 0 0 5px rgba(118,127,137,.15);
-  }
-  .chat.ptt-muted .ch-bigmic:not(.live):not(.locked) .orbit{
-    animation:none;
-    background:conic-gradient(
-      var(--gray-dark) 0deg 52deg,    transparent 52deg 120deg,
-      var(--gray-dark) 120deg 172deg, transparent 172deg 240deg,
-      var(--gray-dark) 240deg 292deg, transparent 292deg 360deg
-    );
-  }
+  /* The mic keeps its blue — you can still transmit while silenced. Only the
+     orbiting arcs go, since those say "this channel is armed and listening". */
+  .chat.ptt-muted .ch-bigmic:not(.live) .orbit{ display:none; }
 
   /* …and the menu row that silenced it becomes the way back out */
   #cmMutePtt .cm-on{ display:none; }
