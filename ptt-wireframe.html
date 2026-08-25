@@ -2065,7 +2065,7 @@
           <div class="sheet-opts">
             <button type="button" class="sheet-opt" data-hours="1">שעה</button>
             <button type="button" class="sheet-opt" data-hours="2">שעתיים</button>
-            <button type="button" class="sheet-opt" data-hours="4">4 שעות</button>
+            <button type="button" class="sheet-opt" data-hours="8">8 שעות</button>
             <button type="button" class="sheet-opt" data-hours="24">24 שעות</button>
           </div>
         </div>
@@ -3340,9 +3340,9 @@
   var PTT_BANNER_ON = chBannerTxt.textContent;
   function mutePttFor(hours){
     var until = new Date(Date.now() + hours * 3600 * 1000);
-    var hh = until.getHours(), mm = until.getMinutes();
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
     chatScreen.classList.add('ptt-muted');
-    chBannerTxt.textContent = 'PTT מושתק עד ' + hh + ':' + (mm < 10 ? '0' : '') + mm;
+    chBannerTxt.textContent = 'PTT מושתק עד ' + pad(until.getHours()) + ':' + pad(until.getMinutes());
   }
   function clearPttMute(){
     chatScreen.classList.remove('ptt-muted');
