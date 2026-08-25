@@ -1230,6 +1230,61 @@
     color:#2c86f1; font-family:inherit; font-size:14px; font-weight:400;
     cursor:pointer;
   }
+
+  /* Confirm dialog — DS "small dialog" (1199:625), the close-an-event modal.
+     300 wide, r8, vertical stack gap 8, shadow 0 4 7 #0000002E. Header and
+     footer are both 40/48 rows padded 8/24/8/8: X on the left, title right;
+     destructive primary then a plain tertiary in the footer. */
+  .dlg-scrim{
+    position:absolute; inset:0; z-index:60;
+    display:none;
+    background:rgba(0,0,0,.6);
+    align-items:center; justify-content:center;
+    padding:0 20px;
+  }
+  .dlg-scrim.open{ display:flex; }
+  .dlg{
+    direction:rtl;
+    width:300px; max-width:100%;
+    background:#fff; border-radius:8px;
+    display:flex; flex-direction:column; gap:8px;
+    box-shadow:0 4px 7px rgba(0,0,0,.18);
+    overflow:hidden;
+  }
+  .dlg-head{
+    display:flex; align-items:center; justify-content:space-between;
+    height:40px; padding:8px 24px 8px 8px;
+    border-bottom:1px solid #f4f4f5;
+    flex-shrink:0;
+  }
+  .dlg-title{ font-size:16px; font-weight:600; line-height:20px; color:#767f89; }
+  .dlg-x{
+    width:24px;height:24px; padding:0; border:none; background:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+  }
+  .dlg-x svg{ stroke:#767f89; display:block; }
+  .dlg-body{
+    padding:16px;
+    font-size:16px; font-weight:400; line-height:20px; color:#1b293b;
+    text-align:right;
+  }
+  .dlg-body b{ font-weight:700; }
+  .dlg-foot{
+    display:flex; align-items:center;
+    height:48px; padding:8px 24px 8px 8px;
+    flex-shrink:0;
+  }
+  /* buttons sit together on the left, mirroring the DS frame */
+  .dlg-acts{ display:flex; align-items:center; gap:16px; padding:0 16px; }
+  .dlg-btn{
+    height:32px; padding:6px 8px;
+    border:none; border-radius:8px;
+    font-family:inherit; font-size:16px; line-height:20px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .dlg-btn.danger{ background:#db2626; color:#fff; font-weight:700; }
+  .dlg-btn.plain{ background:none; color:#1b293b; font-weight:400; }
   .sheet-opt:active{ background:#dbeafe; }
   @media (prefers-reduced-motion: reduce){
     .sheet{ transition:none; }
@@ -1540,6 +1595,7 @@
   <button type="button" data-state="chatmenu" data-screen="chat">תפריט צ׳אט</button>
   <button type="button" data-state="pttmute" data-screen="chat">השתקת PTT</button>
   <button type="button" data-state="pttmuted" data-screen="chat">PTT מושתק</button>
+  <button type="button" data-state="closeptt" data-screen="chat">סגירת PTT</button>
   <button type="button" data-state="pttrequest" data-screen="chat">בקשת PTT נכנסת</button>
 
   <span class="lbl" data-group="settings">הגדרות PTT</span>
@@ -2085,6 +2141,23 @@
             <button type="button" class="sheet-opt" data-hours="2">שעתיים</button>
             <button type="button" class="sheet-opt" data-hours="8">8 שעות</button>
             <button type="button" class="sheet-opt" data-hours="24">24 שעות</button>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-scrim" id="closePttScrim">
+        <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="closePttTitle">
+          <div class="dlg-head">
+            <span class="dlg-title" id="closePttTitle">סגירת PTT</span>
+            <button type="button" class="dlg-x" id="closePttX" aria-label="סגירה">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <div class="dlg-body">לסגור את צ׳אט ה-PTT עבור <b id="closePttCount">5 אנשים</b>?</div>
+          <div class="dlg-foot">
+            <span class="dlg-acts">
+              <button type="button" class="dlg-btn danger" id="closePttYes">סגור</button>
+              <button type="button" class="dlg-btn plain" id="closePttNo">אל תסגור</button>
+            </span>
           </div>
         </div>
       </div>
@@ -3041,7 +3114,7 @@
     toastTimer = setTimeout(function () { chToast.classList.remove('show'); }, 2600);
   }
   function openChat() { chatScreen.classList.add('open'); }
-  function closeChat() { chatScreen.classList.remove('open'); var m=document.getElementById('chatMenu'); if(m) m.classList.remove('open'); var sh=document.getElementById('pttMuteScrim'); if(sh) sh.classList.remove('open'); }
+  function closeChat() { chatScreen.classList.remove('open'); var m=document.getElementById('chatMenu'); if(m) m.classList.remove('open'); var sh=document.getElementById('pttMuteScrim'); if(sh) sh.classList.remove('open'); var cd=document.getElementById('closePttScrim'); if(cd) cd.classList.remove('open'); }
   function chatPttOn(on) {
     chatScreen.classList.toggle('ptt', on);
     chPtt.classList.toggle('on', on);
@@ -3052,7 +3125,7 @@
   chPtt.addEventListener('click', function () {
     if (!pttEnabled) { showToast('PTT כבוי בהגדרות'); }
   });
-  document.getElementById('chBx').addEventListener('click', function () { chatPttOn(false); });
+  document.getElementById('chBx').addEventListener('click', openClosePttDialog);
   document.querySelector('#chatScreen .ch-back').addEventListener('click', closeChat);
   document.querySelectorAll('#chatsScreen .chat-card').forEach(function (c) {
     c.addEventListener('click', openChat);
@@ -3299,9 +3372,35 @@
     if (previous) showToast('PTT הועבר מ״' + cardName(previous) + '״');
   }, true);
 
-  document.getElementById('chBx').addEventListener('click', function () {
+  // Closing the channel ends it for everyone in the chat, so the banner's X
+  // asks first — these are the two halves of the close, run only on confirm.
+  function closePttChannel() {
+    chatPttOn(false);
     if (pttCard) { pttCard.classList.remove('is-ptt'); pttCard = null; syncPttDockLabel(); playBlips(TONE_MODE_OFF); }
-  }, true);
+  }
+
+  var closePttScrim = document.getElementById('closePttScrim');
+  var CLOSE_PTT_MEMBERS = 5;
+  function openClosePttDialog() {
+    document.getElementById('closePttCount').textContent = CLOSE_PTT_MEMBERS + ' אנשים';
+    closePttScrim.classList.add('open');
+  }
+  function closeClosePttDialog() { closePttScrim.classList.remove('open'); }
+  document.getElementById('closePttYes').addEventListener('click', function () {
+    closeClosePttDialog();
+    closePttChannel();
+  });
+  document.getElementById('closePttNo').addEventListener('click', closeClosePttDialog);
+  document.getElementById('closePttX').addEventListener('click', closeClosePttDialog);
+  // tapping the dim backdrop is the same as declining
+  closePttScrim.addEventListener('click', function (e) {
+    if (e.target === closePttScrim) closeClosePttDialog();
+  });
+
+  devStates.closeptt = function () {
+    devStates.chatptt();
+    setTimeout(openClosePttDialog, 0);
+  };
 
   // switching PTT off in settings clears the owning chat too
   pttToggle.addEventListener('click', function () {
