@@ -1157,6 +1157,18 @@
   .ch-name{ font-size:16px; font-weight:600; color:#1b293b; flex:1; }
   .ch-acts{ display:flex; align-items:center; gap:14px; }
 
+
+  /* PTT silenced: both walkie glyphs pick up a slash, and the banner
+     switches from "mode on" to when the silence expires */
+  .ico-muted{ display:none; }
+  .ch-ptt .ico-muted{ --cut:#fff; }
+  .ch-ptt.on .ico-muted{ --cut:#2c86f1; }
+  .ch-banner .bico .ico-muted{ --cut:#1565c0; }
+  .chat.ptt-muted .ch-ptt > svg:not(.ico-muted),
+  .chat.ptt-muted .bico > svg:not(.ico-muted){ display:none; }
+  .chat.ptt-muted .ch-ptt .ico-muted,
+  .chat.ptt-muted .bico .ico-muted{ display:block; }
+
   /* Bottom sheet — geometry from the DS example (3139:6855):
      360 wide, top corners 20, pad 8/0/24/0, gap 16, handle 120x3,
      options are Button secondary M (200x32, r8, 2px #2c86f1). */
@@ -1503,6 +1515,7 @@
   <button type="button" data-state="chattx" data-screen="chat">משדר</button>
   <button type="button" data-state="chatmenu" data-screen="chat">תפריט צ׳אט</button>
   <button type="button" data-state="pttmute" data-screen="chat">השתקת PTT</button>
+  <button type="button" data-state="pttmuted" data-screen="chat">PTT מושתק</button>
   <button type="button" data-state="pttrequest" data-screen="chat">בקשת PTT נכנסת</button>
 
   <span class="lbl" data-group="settings">הגדרות PTT</span>
@@ -1993,7 +2006,7 @@
         <span class="ch-av"><img alt="" src="data:image/jpeg;base64,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"></span>
         <span class="ch-name">יוסי ישראלי</span>
         <span class="ch-acts">
-          <span class="ch-ptt" id="chPtt"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="currentColor"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="currentColor"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="currentColor"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="currentColor"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="currentColor"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="currentColor"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="currentColor"/></svg></span>
+          <span class="ch-ptt" id="chPtt"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="currentColor"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="currentColor"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="currentColor"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="currentColor"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="currentColor"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="currentColor"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="currentColor"/></svg><svg class="ico-muted" width="21" height="21" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="currentColor"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="currentColor"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="currentColor"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="currentColor"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="currentColor"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="currentColor"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="currentColor"/><path d="M3.6 2.8 L21 19.6" stroke="var(--cut,#fff)" stroke-width="4.6" stroke-linecap="round" fill="none"/><path d="M3.6 2.8 L21 19.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" fill="none"/></svg></span>
           <span class="ch-more" id="chMore" role="button" tabindex="0" aria-label="עוד"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 6C14 7.10457 13.1046 8 12 8C10.8954 8 10 7.10457 10 6C10 4.89543 10.8954 4 12 4C13.1046 4 14 4.89543 14 6Z" fill="#767F89"/><path d="M14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12Z" fill="#767F89"/><path d="M14 18C14 19.1046 13.1046 20 12 20C10.8954 20 10 19.1046 10 18C10 16.8954 10.8954 16 12 16C13.1046 16 14 16.8954 14 18Z" fill="#767F89"/></svg></span>
         <div class="chat-menu" id="chatMenu">
           <button type="button" class="cm-item" id="cmMutePtt"><span class="cm-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="4" width="9" height="16" rx="2.4"/><path d="M13 4V2"/><path d="M9.5 8.5h4M9.5 11h4"/><path d="M3.5 3.5l17 17"/></svg></span><span class="cm-lbl">השתקת PTT…</span></button>
@@ -2005,7 +2018,7 @@
       </div>
 
       <div class="ch-banner">
-        <span class="bico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="#fff"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="#fff"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="#fff"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="#fff"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="#fff"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="#fff"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="#fff"/></svg></span>
+        <span class="bico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="#fff"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="#fff"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="#fff"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="#fff"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="#fff"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="#fff"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="#fff"/></svg><svg class="ico-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.25 11C3.25 10.0335 4.0335 9.25 5 9.25H7C7.41421 9.25 7.75 9.58579 7.75 10V13C7.75 13.4142 7.41421 13.75 7 13.75H5C4.0335 13.75 3.25 12.9665 3.25 12V11ZM4.75 12C4.75 12.1381 4.86193 12.25 5 12.25H6.25V10.75H5C4.86193 10.75 4.75 10.8619 4.75 11V12Z" fill="#fff"/><path d="M14 6V2C14 1.44772 14.4477 1 15 1C15.5523 1 16 1.44772 16 2V6C16 6.55228 15.5523 7 15 7C14.4477 7 14 6.55228 14 6Z" fill="#fff"/><path d="M16.9728 9.21484C16.9728 8.66261 16.525 8.21493 15.9728 8.21484H9.02747C8.47521 8.21487 8.02747 8.66258 8.02747 9.21484V19.2422C8.02746 19.7945 8.47518 20.2422 9.02747 20.2422H15.9728C16.525 20.2421 16.9728 19.7944 16.9728 19.2422V9.21484ZM18.9728 19.2422C18.9728 20.899 17.6295 22.2421 15.9728 22.2422H9.02747C7.37061 22.2422 6.02746 20.899 6.02747 19.2422V9.21484C6.02747 7.55801 7.37064 6.21487 9.02747 6.21484H15.9728C17.6296 6.21493 18.9728 7.55805 18.9728 9.21484V19.2422Z" fill="#fff"/><path d="M15.375 11.75C15.7202 11.75 16 12.0298 16 12.375C16 12.7202 15.7202 13 15.375 13H9.625C9.27982 13 9 12.7202 9 12.375C9 12.0298 9.27982 11.75 9.625 11.75H15.375Z" fill="#fff"/><path d="M15.375 13.75C15.7202 13.75 16 14.0298 16 14.375C16 14.7202 15.7202 15 15.375 15H9.625C9.27982 15 9 14.7202 9 14.375C9 14.0298 9.27982 13.75 9.625 13.75H15.375Z" fill="#fff"/><path d="M15.375 15.75C15.7202 15.75 16 16.0298 16 16.375C16 16.7202 15.7202 17 15.375 17H9.625C9.27982 17 9 16.7202 9 16.375C9 16.0298 9.27982 15.75 9.625 15.75H15.375Z" fill="#fff"/><path d="M15.375 9.75C15.7202 9.75 16 10.0298 16 10.375C16 10.7202 15.7202 11 15.375 11H9.625C9.27982 11 9 10.7202 9 10.375C9 10.0298 9.27982 9.75 9.625 9.75H15.375Z" fill="#fff"/><path d="M3.6 2.8 L21 19.6" stroke="var(--cut,#fff)" stroke-width="4.6" stroke-linecap="round" fill="none"/><path d="M3.6 2.8 L21 19.6" stroke="#fff" stroke-width="2.1" stroke-linecap="round" fill="none"/></svg></span>
         <span class="btxt">מצב PTT מופעל</span>
         <span class="bx" id="chBx"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
       </div>
@@ -2047,10 +2060,10 @@
             <div class="sheet-sub">שידורי ה-PTT בצ׳אט הזה יושתקו לפרק הזמן שתבחרו</div>
           </div>
           <div class="sheet-opts">
-            <button type="button" class="sheet-opt">שעה</button>
-            <button type="button" class="sheet-opt">שעתיים</button>
-            <button type="button" class="sheet-opt">4 שעות</button>
-            <button type="button" class="sheet-opt">24 שעות</button>
+            <button type="button" class="sheet-opt" data-hours="1">שעה</button>
+            <button type="button" class="sheet-opt" data-hours="2">שעתיים</button>
+            <button type="button" class="sheet-opt" data-hours="4">4 שעות</button>
+            <button type="button" class="sheet-opt" data-hours="24">24 שעות</button>
           </div>
         </div>
       </div>
@@ -3011,6 +3024,7 @@
   function chatPttOn(on) {
     chatScreen.classList.toggle('ptt', on);
     chPtt.classList.toggle('on', on);
+    if (!on && typeof clearPttMute === 'function') clearPttMute();
   }
   // Only the disabled case lives here — the owner logic is further down,
   // where PTT is moved between chats.
@@ -3317,6 +3331,21 @@
   };
 
 
+
+  // ---- PTT silenced state -------------------------------------------------
+  var chBannerTxt = document.querySelector('#chatScreen .btxt');
+  var PTT_BANNER_ON = chBannerTxt.textContent;
+  function mutePttFor(hours){
+    var until = new Date(Date.now() + hours * 3600 * 1000);
+    var hh = until.getHours(), mm = until.getMinutes();
+    chatScreen.classList.add('ptt-muted');
+    chBannerTxt.textContent = 'PTT מושתק עד ' + hh + ':' + (mm < 10 ? '0' : '') + mm;
+  }
+  function clearPttMute(){
+    chatScreen.classList.remove('ptt-muted');
+    chBannerTxt.textContent = PTT_BANNER_ON;
+  }
+
   // ---- "silence PTT…" bottom sheet ---------------------------------------
   var pttMuteScrim = document.getElementById('pttMuteScrim');
   function openPttMute(){ pttMuteScrim.classList.add('open'); }
@@ -3330,12 +3359,21 @@
   pttMuteScrim.addEventListener('click', function (e) {
     if (!e.target.closest('.sheet')) { closePttMute(); return; }
     var opt = e.target.closest('.sheet-opt');
-    if (opt) { closePttMute(); showToast('PTT מושתק ל' + opt.textContent.trim()); }
+    if (opt) {
+      closePttMute();
+      mutePttFor(parseFloat(opt.dataset.hours));
+    }
   });
 
   devStates.pttmute = function () {
     devStates.chatptt();
     openPttMute();
+  };
+
+  // the silenced result, rather than the sheet that leads to it
+  devStates.pttmuted = function () {
+    devStates.chatptt();
+    mutePttFor(2);
   };
 
   devStates.chattx = function () {
