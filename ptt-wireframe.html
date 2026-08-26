@@ -1179,8 +1179,15 @@
   .sheet-scrim{
     position:absolute; inset:0; z-index:50;
     display:none;
+    background:rgba(0,0,0,.5);
   }
-  .sheet-scrim.open{ display:block; }
+  /* display can't transition, so the dim fades in on the same .28s as the
+     sheet's slide rather than hard-cutting under a moving panel */
+  .sheet-scrim.open{ display:block; animation:scrimIn .28s ease both; }
+  @keyframes scrimIn{ from{ background:rgba(0,0,0,0); } to{ background:rgba(0,0,0,.5); } }
+  @media (prefers-reduced-motion: reduce){
+    .sheet-scrim.open{ animation:none; }
+  }
   .sheet{
     position:absolute; left:0; right:0; bottom:0;
     direction:rtl;
