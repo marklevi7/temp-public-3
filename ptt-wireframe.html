@@ -23,6 +23,7 @@
     --card:#ffffff;
     --muted:#6b7684;
     --accent:#1f6f8b;
+    --blue500:#2c86f1;   /* DS blue/500 — unread counters, live-channel badge */
     --blue700:#1a5fc4;   /* DS blue/700 — PTT mic, its orbit, settings FAB */
     --accent-soft:#d8ebf1;
     --danger:#c0453a;
@@ -1071,7 +1072,7 @@
   .cc-time .t{ font-size:16px; line-height:20px; color:#1b293b; white-space:nowrap; }
   .cc-badge{
     width:20px; height:20px; border-radius:30px;
-    background:#2c86f1;
+    background:var(--blue500);
     color:#fff; font-size:14px; font-weight:700; line-height:20px;
     display:flex; align-items:center; justify-content:center;
   }
@@ -1084,7 +1085,7 @@
   .cc-live{
     position:relative;
     width:28px; height:28px; border-radius:50%;
-    background:var(--blue700);
+    background:var(--blue500);
     display:none; align-items:center; justify-content:center;
     flex-shrink:0;
     color:#fff;
@@ -1099,9 +1100,9 @@
   .cc-live .orbit{
     position:absolute; inset:-4px; border-radius:50%;
     background:conic-gradient(
-      var(--blue700) 0deg 52deg,    transparent 52deg 120deg,
-      var(--blue700) 120deg 172deg, transparent 172deg 240deg,
-      var(--blue700) 240deg 292deg, transparent 292deg 360deg
+      var(--blue500) 0deg 52deg,    transparent 52deg 120deg,
+      var(--blue500) 120deg 172deg, transparent 172deg 240deg,
+      var(--blue500) 240deg 292deg, transparent 292deg 360deg
     );
     -webkit-mask:radial-gradient(closest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
     mask:radial-gradient(closest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
