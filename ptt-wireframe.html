@@ -24,6 +24,7 @@
     --muted:#6b7684;
     --accent:#1f6f8b;
     --blue500:#2c86f1;   /* DS blue/500 — unread counters, live-channel badge */
+    --gray600:#4a5463;   /* DS gray/600 — the disc inside the silenced banner */
     --blue700:#1a5fc4;   /* DS blue/700 — PTT mic, its orbit, settings FAB */
     --accent-soft:#d8ebf1;
     --danger:#c0453a;
@@ -1199,8 +1200,8 @@
   .chat.ptt-muted .ch-ptt.on{ background:var(--gray-dark); }
   .chat.ptt-muted .ch-ptt.on svg.ico-muted{ --cut:var(--gray-dark); }
   .chat.ptt-muted .ch-banner{ background:var(--gray-dark); }
-  .chat.ptt-muted .ch-banner .bico{ background:var(--text-secondary); }
-  .chat.ptt-muted .ch-banner .bico svg.ico-muted{ --cut:var(--text-secondary); }
+  .chat.ptt-muted .ch-banner .bico{ background:var(--gray600); }
+  .chat.ptt-muted .ch-banner .bico svg.ico-muted{ --cut:var(--gray600); }
   /* The mic keeps its blue — you can still transmit while silenced. Only the
      orbiting arcs go, since those say "this channel is armed and listening". */
   .chat.ptt-muted .ch-bigmic:not(.live) .orbit{ display:none; }
