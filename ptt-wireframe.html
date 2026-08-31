@@ -1568,9 +1568,14 @@
     border-radius:16px;
     box-shadow:0 10px 28px -8px rgba(0,0,0,.35);
     padding:14px;
-    transition:bottom .28s cubic-bezier(.2,.8,.3,1);
+    visibility:hidden; pointer-events:none;
+    transition:bottom .28s cubic-bezier(.2,.8,.3,1), visibility 0s linear .28s;
   }
-  .ptt-request.show{ bottom:calc(72px + env(safe-area-inset-bottom)); }
+  .ptt-request.show{
+    bottom:calc(72px + env(safe-area-inset-bottom));
+    visibility:visible; pointer-events:auto;
+    transition:bottom .28s cubic-bezier(.2,.8,.3,1), visibility 0s;
+  }
   @media (prefers-reduced-motion: reduce){
     .ptt-request{ transition:none; }
   }
@@ -2765,11 +2770,7 @@
       settingsEl.classList.add('open');
       settingsEl.classList.add('chat-empty');
     },
-    chats: function () {
-      settingsEl.classList.add('open');
-      var list = document.getElementById('chatList');
-      if (list && list.scrollIntoView) list.scrollIntoView({ block: 'start' });
-    },
+    chats: function () { settingsEl.classList.add('open'); },
     chatlist: function () { openChats(); },
     chatlistempty: function () {
       openChats();
