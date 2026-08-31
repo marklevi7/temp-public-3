@@ -1190,15 +1190,15 @@
   .chat.ptt-muted .ch-ptt svg.ico-muted,
   .chat.ptt-muted .bico svg.ico-muted{ display:block; }
   .ch-ptt svg.ico-muted{ --cut:#fff; }
-  .ch-ptt.on svg.ico-muted{ --cut:#2c86f1; }
   .bico svg.ico-muted{ --cut:#1565c0; }
 
   /* Silenced is an off state, not a blue one: every blue surface the walkie
      glyph sits on drops to Gray Dark, and the mic's orbit stops spinning —
      nothing is listening, so nothing should look live. `.live` is excluded so
      transmitting still reads red. */
-  .chat.ptt-muted .ch-ptt.on{ background:var(--gray-dark); }
-  .chat.ptt-muted .ch-ptt.on svg.ico-muted{ --cut:var(--gray-dark); }
+  /* silenced follows: a grey glyph on the header, not a grey disc, so the
+     chip does not gain and lose a circle as the state changes */
+  .chat.ptt-muted .ch-ptt.on{ color:var(--gray-dark); }
   .chat.ptt-muted .ch-banner{ background:var(--gray-dark); }
   .chat.ptt-muted .ch-banner .bico{ background:var(--gray600); }
   .chat.ptt-muted .ch-banner .bico svg.ico-muted{ --cut:var(--gray600); }
@@ -1377,7 +1377,7 @@
   }
   .ch-ptt{ color:#1b293b; }
   .ch-ptt svg{ stroke:none; }
-  .ch-ptt.on{ background:#2c86f1; color:#fff; }
+  .ch-ptt.on{ color:var(--blue500); }
 
   .ch-banner{
     direction:rtl;
@@ -1461,7 +1461,11 @@
   .vb .dur{ font-size:11px; color:#767f89; }
 
   .ch-input{
-    direction:rtl;
+    /* Hebrew RTL puts the controls on the left and lets the field open to
+       the right: ltr here sends the mic and the field's clip/camera to the
+       leading edge. .ch-live-info is centred with left:50%, so it does not
+       move. */
+    direction:ltr;
     position:relative;
     display:flex; align-items:center; gap:10px;
     padding:10px 16px calc(10px + env(safe-area-inset-bottom));
