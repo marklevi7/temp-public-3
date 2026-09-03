@@ -3287,8 +3287,13 @@
     pttCard = incoming;
     pttCard.classList.add('is-ptt');
     syncPttDockLabel();
-    if (openCard === incoming) chatPttOn(true);
-    else if (openCard) chatPttOn(false);
+    // the button says "go there", so go there: open the chat that asked
+    // rather than leaving you in the one you were reading with its channel
+    // switched off underneath you
+    openCard = incoming;
+    paintChatHeader(incoming);
+    openChat();
+    chatPttOn(true);
     playBlips(TONE_MODE_ON);
     if (previous) showToast('PTT הועבר מ״' + cardName(previous) + '״');
     hidePttRequest();
