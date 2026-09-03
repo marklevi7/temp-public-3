@@ -1432,10 +1432,9 @@
   .vb .dur{ font-size:11px; color:#767f89; }
 
   .ch-input{
-    /* Hebrew RTL puts the controls on the left and lets the field open to
-       the right: ltr here sends the mic and the field's clip/camera to the
-       leading edge. .ch-live-info is centred with left:50%, so it does not
-       move. */
+    /* A regular chat keeps its controls on the left: ltr sends the voice mic
+       and the field's clip/camera to the leading edge. .ch-live-info is
+       centred with left:50%, so it does not move either way. */
     direction:ltr;
     position:relative;
     display:flex; align-items:center; gap:10px;
@@ -1468,6 +1467,9 @@
     flex-shrink:0;
   }
   .chat.ptt .ci-ptt-wrap{ display:flex; }
+  /* ...but a PTT chat puts them on the right instead, so the send button
+     sits under the thumb on the same side the channel controls do */
+  .chat.ptt .ch-input{ direction:rtl; }
   /* Timer + meter float above the button so it never shifts sideways
      when they appear — the button's position never changes on press. */
   .ch-live-info{
