@@ -1567,7 +1567,9 @@
     background:#fff;
     border-radius:16px;
     box-shadow:0 10px 28px -8px rgba(0,0,0,.35);
-    padding:14px;
+    padding:12px 14px;
+    display:flex; flex-direction:column; gap:10px;
+    box-sizing:border-box;
     visibility:hidden; pointer-events:none;
     transition:bottom .28s cubic-bezier(.2,.8,.3,1), visibility 0s linear .28s;
   }
@@ -1579,20 +1581,6 @@
   @media (prefers-reduced-motion: reduce){
     .ptt-request{ transition:none; }
   }
-  .pr-row{ display:flex; align-items:center; gap:10px; }
-  .pr-av{ width:40px;height:40px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center; }
-  .pr-av img{ width:100%;height:100%;object-fit:cover;display:block; }
-  .pr-text{ flex:1; min-width:0; text-align:right; }
-  .pr-name{ font-size:15px;font-weight:700;color:#1b293b; }
-  .pr-sub{ font-size:12.5px;color:#767f89;margin-top:2px; }
-  .pr-actions{ display:flex; gap:10px; margin-top:12px; }
-  .pr-btn{
-    flex:1; border:none; border-radius:10px;
-    padding:10px 0; font-size:14px; font-weight:700;
-    cursor:pointer;
-  }
-  .pr-btn.decline{ background:#f4f4f5; color:#1b293b; }
-  .pr-btn.accept{ background:#2c86f1; color:#fff; }
 
   .hint{
     font-size:11px;
@@ -1642,16 +1630,17 @@
 <div class="phone">
     <button type="button" class="dev-hotspot" id="devHotspot" aria-hidden="true"></button>
     <div class="ptt-request" id="pttRequest">
-      <div class="pr-row">
-        <span class="pr-av" id="prAv"></span>
-        <div class="pr-text">
-          <div class="pr-name" id="prName"></div>
-          <div class="pr-sub">מבקש/ת לעבור אליו את שידור ה-PTT</div>
-        </div>
+      <div class="ad-head">
+        <span class="ad-person">
+          <span class="ad-avatar" id="prAv"></span>
+          <span class="ad-name" id="prName"></span>
+        </span>
+        <span class="ad-close" id="prDecline" role="button" aria-label="התעלם"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1b293b" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
       </div>
-      <div class="pr-actions">
-        <button type="button" class="pr-btn decline" id="prDecline">התעלם</button>
-        <button type="button" class="pr-btn accept" id="prAccept">עבור לשם</button>
+      <div class="ad-msg">מבקש/ת לעבור אליו את שידור ה-PTT</div>
+      <div class="ad-actions">
+        <button type="button" class="ad-play" id="prPlay" aria-label="האזנה"><svg class="ico-play" width="15" height="15" viewBox="0 0 16 16"><path d="M4.5 2.5 13 8l-8.5 5.5z"/></svg><svg class="ico-stop" width="15" height="15" viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/></svg></button>
+        <button type="button" class="ad-btn" id="prAccept">עבור לשם</button>
       </div>
     </div>
     <div class="alert-scrim" id="alertScrim">
@@ -3215,6 +3204,7 @@
   function hidePttRequest() {
     pttRequestEl.classList.remove('show');
     pendingRequestCard = null;
+    if (typeof stopPrClip === 'function') stopPrClip();   // dismissing stops playback
   }
 
   // ---- Incoming PTT request toast ----------------------------------------
@@ -3250,6 +3240,26 @@
     } catch (err) { stopAlertClip(); }
   });
   alertClip.addEventListener('ended', stopAlertClip);
+
+  // The request card carries the same play control. Both share one clip, so
+  // starting either stops the other rather than fighting over the element.
+  var prPlayBtn = document.getElementById('prPlay');
+  function stopPrClip() {
+    prPlayBtn.classList.remove('playing');
+    try { alertClip.pause(); alertClip.currentTime = 0; } catch (err) {}
+  }
+  prPlayBtn.addEventListener('click', function () {
+    if (prPlayBtn.classList.contains('playing')) { stopPrClip(); return; }
+    stopAlertClip();
+    voiceReset(alertClip);
+    prPlayBtn.classList.add('playing');
+    try {
+      alertClip.currentTime = 0;
+      var pr = alertClip.play();
+      if (pr && pr.catch) pr.catch(stopPrClip);
+    } catch (err) { stopPrClip(); }
+  });
+  alertClip.addEventListener('ended', stopPrClip);
 
   document.querySelector('.status-badge').addEventListener('click', showAlertDialog);
   document.getElementById('alertClose').addEventListener('click', hideAlertDialog);
