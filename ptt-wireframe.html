@@ -943,7 +943,9 @@
     position:absolute;
     top:0; left:0;
     width:56px; height:40px;
-    z-index:10;
+    /* above every screen overlay — the chats and chat screens stack over the
+       map, and at z-index 10 this was buried under them */
+    z-index:999;
     background:transparent;
     border:none;
     padding:0;
