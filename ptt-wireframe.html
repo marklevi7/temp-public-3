@@ -942,7 +942,9 @@
   .dev-hotspot{
     position:absolute;
     top:0; left:0;
-    width:56px; height:40px;
+    /* a thin strip along the very top edge: the chat header's kebab starts at
+       x16/y16, and at 56x40 this sat right on top of it */
+    width:56px; height:14px;
     /* above every screen overlay — the chats and chat screens stack over the
        map, and at z-index 10 this was buried under them */
     z-index:999;
