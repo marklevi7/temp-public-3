@@ -2361,9 +2361,12 @@
     osc.stop(t0 + d + 0.01);
   }
 
-  // Start sending: one beep.
+  // Start sending: la-la-laaa on A5 — two short beats and a held one, so
+  // "you are live" is a phrase rather than a single blip you might miss.
   var TONE_ON = [
-    [523.25, 0, 0.1, 0.5]  // C5
+    [880, 0,      0.0526, 0.45],  // la
+    [880, 0.0827, 0.0526, 0.48],  // la
+    [880, 0.1654, 0.3308, 0.55]   // laaa
   ];
 
   // Rising do–fa–do', a full octave, played when a transmission ends.
